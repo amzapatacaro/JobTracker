@@ -55,6 +55,9 @@ public sealed class JobConfiguration : IEntityTypeConfiguration<Job>
             }
         );
 
+        // Photos is a read-only projection of _photos; map only the backing field to avoid EF conflict.
+        builder.Ignore(x => x.Photos);
+
         builder
             .HasMany<JobPhoto>("_photos")
             .WithOne()

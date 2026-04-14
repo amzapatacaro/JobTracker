@@ -22,7 +22,7 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
         if (context is null)
             return base.SavingChangesAsync(eventData, result, cancellationToken);
 
-        foreach (var entry in context.ChangeTracker.Entries<AggregateRoot>())
+        foreach (var entry in context.ChangeTracker.Entries<AggregateRoot>().ToList())
         {
             foreach (var domainEvent in entry.Entity.DomainEvents.ToArray())
             {
@@ -118,7 +118,7 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
         if (context is null)
             return;
 
-        foreach (var entry in context.ChangeTracker.Entries<AggregateRoot>())
+        foreach (var entry in context.ChangeTracker.Entries<AggregateRoot>().ToList())
             entry.Entity.ClearDomainEvents();
     }
 }
