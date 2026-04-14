@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>JobTracker.Jobs.Presentation</RootNamespace>
+    <AssemblyName>JobTracker.Jobs.Presentation</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\JobTracker.Jobs.Application.csproj" />
+    <ProjectReference Include="..\Domain\JobTracker.Jobs.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
