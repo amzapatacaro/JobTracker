@@ -1,0 +1,23 @@
+@layer components {
+  .jt-btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition;
+    @apply hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .jt-btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm transition;
+    @apply hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /** Scrollable region without visible scrollbar (wheel / trackpad / touch still work). */
+  .jt-hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .jt-hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
