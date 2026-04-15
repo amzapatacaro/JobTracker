@@ -2,8 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - release/jobtracker
+      - main
+      - master
   pull_request:
+    branches:
+      - release/jobtracker
+      - main
+      - master
 
 permissions:
   contents: read
