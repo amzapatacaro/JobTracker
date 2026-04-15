@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="JobTracker.Jobs.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Domain\JobTracker.Jobs.Domain.csproj" />
     <ProjectReference Include="..\..\Shared\JobTracker.Shared.csproj" />
   </ItemGroup>
