@@ -38,7 +38,10 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
   const jobsPage = useJobsPage(props)
 
   return (
-    <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col">
+    <div
+      className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col"
+      data-testid="jobs-page"
+    >
       <header className="shrink-0">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
@@ -47,6 +50,7 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
           <button
             type="button"
             className="jt-btn-primary"
+            data-testid="jobs-open-create-modal"
             onClick={jobsPage.create.openModal}
           >
             New job
@@ -79,7 +83,10 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
           {jobsPage.filteredJobs.length > 0 ? (
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
               <div className="jt-hide-scrollbar min-h-0 flex-1 overflow-auto overscroll-none">
-                <table className="w-full min-w-[640px] text-sm">
+                <table
+                  className="w-full min-w-[640px] text-sm"
+                  data-testid="jobs-table"
+                >
                   <thead className="sticky top-0 z-10">
                     <tr className="border-b border-zinc-200 bg-zinc-50/95 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 backdrop-blur-sm">
                       <th className="w-10 px-4 py-3" scope="col" />
@@ -101,6 +108,8 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
                     {jobsPage.filteredJobs.map((job) => (
                       <tr
                         key={job.id}
+                        data-testid="job-row"
+                        data-job-id={job.id}
                         className="transition-colors hover:bg-zinc-50/80"
                       >
                         <td className="px-4 py-3">
@@ -121,7 +130,10 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
                           </Link>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={jobStatusBadgeClass(job.status)}>
+                          <span
+                            className={jobStatusBadgeClass(job.status)}
+                            data-testid="job-status"
+                          >
                             {formatJobStatus(job.status)}
                           </span>
                         </td>
@@ -133,6 +145,7 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
                             <button
                               type="button"
                               className="jt-btn-primary"
+                              data-testid="job-complete-button"
                               onClick={() =>
                                 jobsPage.complete.openForJob(
                                   job.id,

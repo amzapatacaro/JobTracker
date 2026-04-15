@@ -48,6 +48,7 @@ function Status() {
         value={statusFilter}
         onChange={(e) => setStatusFilter(e.target.value)}
         className={`${control} min-w-[160px] select-native`}
+        data-testid="jobs-filter-status"
       >
         <option value="">All</option>
         <option value="Draft">Draft</option>
@@ -140,6 +141,7 @@ function Apply() {
     <button
       type="button"
       className="jt-btn-primary shrink-0 self-end px-4 py-2 text-sm"
+      data-testid="jobs-filter-apply"
       onClick={applySearch}
       aria-label="Apply filters and reload the list"
     >

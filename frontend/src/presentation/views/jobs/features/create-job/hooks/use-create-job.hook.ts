@@ -26,7 +26,8 @@ type FormAction =
   | { type: 'update'; field: keyof CreateJobFormState; value: string }
   | { type: 'reset'; initial: CreateJobFormState }
 
-function formReducer(
+/** Exported for unit tests (reducer + reset behaviour). */
+export function formReducer(
   state: CreateJobFormState,
   action: FormAction
 ): CreateJobFormState {
@@ -40,7 +41,7 @@ function formReducer(
   }
 }
 
-const emptyForm = (): CreateJobFormState => ({
+export const emptyForm = (): CreateJobFormState => ({
   title: '',
   description: '',
   street: '',

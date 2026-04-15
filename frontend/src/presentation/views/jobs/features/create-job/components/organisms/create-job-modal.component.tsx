@@ -48,6 +48,7 @@ export function CreateJobModal({
       aria-modal="true"
       aria-labelledby="create-job-dialog-title"
       className="jt-modal-shell"
+      data-testid="create-job-modal"
     >
       <button
         type="button"
@@ -71,6 +72,7 @@ export function CreateJobModal({
           <Field
             label="Title"
             required
+            data-testid="create-job-title"
             value={state.title}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'title', value: v })
@@ -78,6 +80,7 @@ export function CreateJobModal({
           />
           <Field
             label="Description"
+            data-testid="create-job-description"
             value={state.description}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'description', value: v })
@@ -86,6 +89,7 @@ export function CreateJobModal({
           <Field
             label="Street"
             required
+            data-testid="create-job-street"
             value={state.street}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'street', value: v })
@@ -94,6 +98,7 @@ export function CreateJobModal({
           <Field
             label="City"
             required
+            data-testid="create-job-city"
             value={state.city}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'city', value: v })
@@ -102,6 +107,7 @@ export function CreateJobModal({
           <Field
             label="State"
             required
+            data-testid="create-job-state"
             value={state.state}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'state', value: v })
@@ -110,6 +116,7 @@ export function CreateJobModal({
           <Field
             label="Zip"
             required
+            data-testid="create-job-zip"
             value={state.zipCode}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'zipCode', value: v })
@@ -129,6 +136,7 @@ export function CreateJobModal({
                 })
               }
               className="jt-form-input select-native"
+              data-testid="create-job-assignee"
             >
               <option value="">None</option>
               {MOCK_ASSIGNEE_OPTIONS.map((a) => (
@@ -153,10 +161,12 @@ export function CreateJobModal({
                 })
               }
               className="jt-form-input"
+              data-testid="create-job-scheduled-at"
             />
           </label>
           <Field
             label="Notes"
+            data-testid="create-job-notes"
             value={state.notes}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'notes', value: v })
@@ -175,6 +185,7 @@ export function CreateJobModal({
           <button
             type="button"
             className="jt-btn-primary min-w-0 flex-1"
+            data-testid="create-job-submit"
             onClick={onSubmit}
             disabled={submitting}
           >
@@ -191,11 +202,13 @@ function Field({
   required: isRequired,
   value,
   onChange,
+  'data-testid': dataTestId,
 }: {
   readonly label: string
   readonly required?: boolean
   readonly value: string
   readonly onChange: (v: string) => void
+  readonly 'data-testid'?: string
 }) {
   return (
     <label className="flex flex-col">
@@ -216,6 +229,7 @@ function Field({
         className="jt-form-input"
         required={isRequired}
         aria-required={isRequired ? true : undefined}
+        data-testid={dataTestId}
       />
     </label>
   )

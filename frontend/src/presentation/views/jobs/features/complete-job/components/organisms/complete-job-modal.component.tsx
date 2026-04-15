@@ -52,6 +52,7 @@ export function CompleteJobModal({
       aria-modal="true"
       aria-labelledby="complete-job-dialog-title"
       className="jt-modal-shell"
+      data-testid="complete-job-modal"
     >
       <button
         type="button"
@@ -87,6 +88,7 @@ export function CompleteJobModal({
               className="jt-form-input select-native"
               aria-label="Assignee completing the job"
               aria-required="true"
+              data-testid="complete-job-assignee"
             >
               <option value="">Select assignee</option>
               {MOCK_ASSIGNEE_OPTIONS.map((a) => (
@@ -110,6 +112,7 @@ export function CompleteJobModal({
             className="jt-form-input"
             required
             aria-required="true"
+            data-testid="complete-job-signature-url"
           />
         </label>
         <label className="mt-4 flex flex-col">
@@ -126,6 +129,7 @@ export function CompleteJobModal({
             className="jt-form-input"
             required
             aria-required="true"
+            data-testid="complete-job-completed-at"
           />
         </label>
         <div className="mt-6 flex gap-3">
@@ -140,6 +144,7 @@ export function CompleteJobModal({
           <button
             type="button"
             className="jt-btn-primary min-w-0 flex-1"
+            data-testid="complete-job-submit"
             onClick={onSubmit}
             disabled={submitting}
           >
