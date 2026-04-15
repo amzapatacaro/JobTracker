@@ -1,8 +1,15 @@
-import type { PagedJobs, SearchJobsParams } from './jobs-api.types'
+import type {
+  CreateJobInput,
+  PagedJobs,
+  SearchJobsParams,
+} from './jobs-api.types'
 import { JobsApiError, normalizeJob } from './jobs-api.types'
 
 export type JobsGateway = {
   search: (params: SearchJobsParams) => Promise<PagedJobs>
+  create: (
+    body: CreateJobInput
+  ) => Promise<{ ok: true; id: string } | { ok: false; error: string }>
 }
 
 export function createJobsGateway(baseUrl: string): JobsGateway {
@@ -49,5 +56,41 @@ export function createJobsGateway(baseUrl: string): JobsGateway {
     return { items, totalCount, page, pageSize }
   }
 
-  return { search }
+  async function create(
+    body: CreateJobInput
+  ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+    const res = await fetch(`${base}/api/Jobs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        organizationId: body.organizationId,
+        title: body.title,
+        description: body.description,
+        street: body.street,
+        city: body.city,
+        state: body.state,
+        zipCode: body.zipCode,
+        latitude: body.latitude,
+        longitude: body.longitude,
+        customerId: body.customerId,
+        assigneeId: body.assigneeId ?? null,
+        scheduledDateUtc: body.scheduledDateUtc ?? null,
+        notes: body.notes ?? null,
+      }),
+    })
+
+    const json = (await res.json()) as Record<string, unknown>
+    if (!res.ok) {
+      const err = (json.error as string) ?? res.statusText
+      return { ok: false, error: err }
+    }
+    const id = String(json.id ?? json.Id ?? '')
+    if (!id) return { ok: false, error: 'Missing job id in response' }
+    return { ok: true, id }
+  }
+
+  return { search, create }
 }

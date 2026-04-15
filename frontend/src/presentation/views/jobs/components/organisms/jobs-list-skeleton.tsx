@@ -10,7 +10,10 @@ export function JobsListSkeleton() {
       data-testid="jobs-list-skeleton"
       aria-busy="true"
     >
-      <div className={`h-8 w-24 ${pulse}`} />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className={`h-8 w-24 ${pulse}`} />
+        <div className={`h-10 w-[7.5rem] rounded-lg ${pulse}`} />
+      </div>
       <div className="mt-1 flex gap-2">
         <div className={`h-4 w-48 ${pulse}`} />
       </div>

@@ -6,6 +6,7 @@ import { formatJobStatus, type JobStatusApi } from '@/entities/job'
 import type { JobListPageSize } from '@/shared/config/job-list-page-size'
 import { buildJobsListPath } from '@/shared/config/jobs-list-url'
 
+import { CreateJobModal } from '../../features/create-job'
 import { JobFilterBar } from '../../features/filter-jobs'
 import {
   useJobsPage,
@@ -38,9 +39,18 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
   return (
     <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col">
       <header className="shrink-0">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-          Jobs
-        </h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+            Jobs
+          </h1>
+          <button
+            type="button"
+            className="jt-btn-primary"
+            onClick={jobsPage.create.openModal}
+          >
+            New job
+          </button>
+        </div>
         <p className="mt-1 text-sm text-zinc-500">
           Total from server:{' '}
           <span className="font-medium text-zinc-700">
@@ -191,6 +201,16 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
           </nav>
         ) : null}
       </footer>
+
+      <CreateJobModal
+        open={jobsPage.create.open}
+        submitting={jobsPage.create.submitting}
+        error={jobsPage.create.error}
+        state={jobsPage.create.state}
+        dispatch={jobsPage.create.dispatch}
+        onClose={jobsPage.create.closeModal}
+        onSubmit={() => void jobsPage.create.submit()}
+      />
     </div>
   )
 }

@@ -42,6 +42,22 @@ export type SearchJobsParams = {
   scheduledToUtc?: string
 }
 
+export type CreateJobInput = {
+  organizationId: string
+  title: string
+  description: string
+  street: string
+  city: string
+  state: string
+  zipCode: string
+  latitude: number
+  longitude: number
+  customerId: string
+  assigneeId?: string | null
+  scheduledDateUtc?: string | null
+  notes?: string | null
+}
+
 export class JobsApiError extends Error {
   constructor(
     message: string,

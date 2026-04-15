@@ -4,6 +4,7 @@ import { useLayoutEffect } from 'react'
 
 import type { Job } from '@/entities/job'
 
+import { useCreateJob } from '../features/create-job'
 import {
   useFilterJobs,
   useFilteredJobsSubscription,
@@ -55,6 +56,7 @@ export function useJobsPage({
 
   const { ctx: filterCtx } = useFilterJobs()
   const filteredJobs = useFilteredJobsSubscription()
+  const create = useCreateJob()
   const selectedJobIds = useJobsStore((s) => s.selectedJobIds)
   const selectedCount = useJobsStore(selectSelectedCount)
   const pagination = useJobsStore(selectPagination)
@@ -67,6 +69,7 @@ export function useJobsPage({
     totalPages,
     filterCtx,
     filteredJobs,
+    create,
     selectedJobIds,
     toggleSelected: toggleJobSelected,
     selectedCount,
