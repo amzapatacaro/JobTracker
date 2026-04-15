@@ -11,6 +11,7 @@ internal sealed class CompleteJobCommandValidator : AbstractValidator<CompleteJo
     {
         RuleFor(x => x.OrganizationId).NotEmpty();
         RuleFor(x => x.JobId).NotEmpty();
+        RuleFor(x => x.AssigneeId).NotEmpty();
         RuleFor(x => x.SignatureUrl).NotEmpty().MaximumLength(2000);
         RuleFor(x => x.CompletedAtUtc)
             .Must(d => d != default)

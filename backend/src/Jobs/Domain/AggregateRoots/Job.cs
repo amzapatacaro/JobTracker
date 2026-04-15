@@ -101,14 +101,17 @@ public sealed class Job : Shared.Domain.AggregateRoot
         Touch();
     }
 
-    public void Complete(DateTime completedAtUtc, string signatureUrl)
+    /// <summary>
+    /// Completes the job. If there is no assignee yet, <paramref name="assigneeId"/> is applied; otherwise the existing assignee is unchanged.
+    /// </summary>
+    public void Complete(DateTime completedAtUtc, string signatureUrl, Guid assigneeId)
     {
         EnsureNotTerminal();
         if (Status != JobStatus.InProgress)
             throw new InvalidOperationException("Only in-progress jobs can be completed.");
 
         if (AssigneeId is null)
-            throw new InvalidOperationException("Assignee is required to complete a job.");
+            AssigneeId = assigneeId;
 
         Status = JobStatus.Completed;
         CompletedAt = completedAtUtc;

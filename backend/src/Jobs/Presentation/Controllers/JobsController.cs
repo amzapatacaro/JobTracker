@@ -80,6 +80,7 @@ public sealed class JobsController(IMediator mediator) : ControllerBase
         var command = new CompleteJobCommand(
             organizationId,
             jobId,
+            body.AssigneeId,
             body.SignatureUrl,
             body.CompletedAtUtc
         );

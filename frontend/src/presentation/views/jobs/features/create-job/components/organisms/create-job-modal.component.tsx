@@ -70,6 +70,7 @@ export function CreateJobModal({
         <div className="mt-4 grid gap-4">
           <Field
             label="Title"
+            required
             value={state.title}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'title', value: v })
@@ -84,6 +85,7 @@ export function CreateJobModal({
           />
           <Field
             label="Street"
+            required
             value={state.street}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'street', value: v })
@@ -91,6 +93,7 @@ export function CreateJobModal({
           />
           <Field
             label="City"
+            required
             value={state.city}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'city', value: v })
@@ -98,6 +101,7 @@ export function CreateJobModal({
           />
           <Field
             label="State"
+            required
             value={state.state}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'state', value: v })
@@ -105,6 +109,7 @@ export function CreateJobModal({
           />
           <Field
             label="Zip"
+            required
             value={state.zipCode}
             onChange={(v) =>
               dispatch({ type: 'update', field: 'zipCode', value: v })
@@ -183,20 +188,34 @@ export function CreateJobModal({
 
 function Field({
   label,
+  required: isRequired,
   value,
   onChange,
 }: {
   readonly label: string
+  readonly required?: boolean
   readonly value: string
   readonly onChange: (v: string) => void
 }) {
   return (
     <label className="flex flex-col">
-      <span className="text-xs font-medium text-zinc-600">{label}</span>
+      <span className="text-xs font-medium text-zinc-600">
+        {label}
+        {isRequired ? (
+          <>
+            {' '}
+            <span className="text-red-600" aria-hidden>
+              *
+            </span>
+          </>
+        ) : null}
+      </span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="jt-form-input"
+        required={isRequired}
+        aria-required={isRequired ? true : undefined}
       />
     </label>
   )

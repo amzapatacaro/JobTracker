@@ -37,7 +37,7 @@ export function JobsListSkeleton() {
                 <th className="w-10 px-4 py-3" scope="col">
                   <span className="sr-only">Select</span>
                 </th>
-                {['Title', 'Status', 'Photos'].map((label) => (
+                {['Title', 'Status', 'Photos', 'Actions'].map((label) => (
                   <th
                     key={label}
                     className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-400"
@@ -62,6 +62,9 @@ export function JobsListSkeleton() {
                   </td>
                   <td className="px-4 py-3">
                     <div className={`mx-0 h-3.5 w-6 ${pulse}`} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className={`h-8 w-16 rounded-lg ${pulse}`} />
                   </td>
                 </tr>
               ))}

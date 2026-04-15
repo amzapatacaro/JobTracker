@@ -27,7 +27,7 @@ internal sealed class CompleteJobCommandHandler(
 
         try
         {
-            job.Complete(request.CompletedAtUtc, request.SignatureUrl);
+            job.Complete(request.CompletedAtUtc, request.SignatureUrl, request.AssigneeId);
         }
         catch (InvalidOperationException ex)
         {

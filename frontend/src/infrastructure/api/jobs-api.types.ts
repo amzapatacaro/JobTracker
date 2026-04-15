@@ -58,6 +58,14 @@ export type CreateJobInput = {
   notes?: string | null
 }
 
+export type CompleteJobInput = {
+  jobId: string
+  organizationId: string
+  assigneeId: string
+  signatureUrl: string
+  completedAtUtc: string
+}
+
 export class JobsApiError extends Error {
   constructor(
     message: string,

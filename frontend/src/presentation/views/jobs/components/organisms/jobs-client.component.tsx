@@ -7,6 +7,7 @@ import type { JobListPageSize } from '@/shared/config/job-list-page-size'
 import { buildJobsListPath } from '@/shared/config/jobs-list-url'
 
 import { CreateJobModal } from '../../features/create-job'
+import { CompleteJobModal } from '../../features/complete-job'
 import { JobFilterBar } from '../../features/filter-jobs'
 import {
   useJobsPage,
@@ -91,6 +92,9 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
                       <th className="px-4 py-3" scope="col">
                         Photos
                       </th>
+                      <th className="px-4 py-3" scope="col">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
@@ -123,6 +127,24 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
                         </td>
                         <td className="px-4 py-3 tabular-nums text-zinc-600">
                           {job.photoCount}
+                        </td>
+                        <td className="px-4 py-3">
+                          {job.status === 'InProgress' ? (
+                            <button
+                              type="button"
+                              className="jt-btn-primary"
+                              onClick={() =>
+                                jobsPage.complete.openForJob(
+                                  job.id,
+                                  job.assigneeId
+                                )
+                              }
+                            >
+                              Complete
+                            </button>
+                          ) : (
+                            <span className="text-zinc-400">—</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -210,6 +232,21 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
         dispatch={jobsPage.create.dispatch}
         onClose={jobsPage.create.closeModal}
         onSubmit={() => void jobsPage.create.submit()}
+      />
+
+      <CompleteJobModal
+        open={jobsPage.complete.open}
+        submitting={jobsPage.complete.submitting}
+        error={jobsPage.complete.error}
+        assigneePickerRequired={jobsPage.complete.assigneePickerRequired}
+        assigneeId={jobsPage.complete.assigneeId}
+        onAssigneeIdChange={jobsPage.complete.setAssigneeId}
+        signatureUrl={jobsPage.complete.signatureUrl}
+        onSignatureUrlChange={jobsPage.complete.setSignatureUrl}
+        completedAtUtc={jobsPage.complete.completedAtUtc}
+        onCompletedAtChange={jobsPage.complete.setCompletedAtUtc}
+        onClose={jobsPage.complete.closeModal}
+        onSubmit={() => void jobsPage.complete.submit()}
       />
     </div>
   )

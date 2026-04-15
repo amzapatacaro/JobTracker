@@ -1,4 +1,5 @@
 import type {
+  CompleteJobInput,
   CreateJobInput,
   PagedJobs,
   SearchJobsParams,
@@ -10,6 +11,9 @@ export type JobsGateway = {
   create: (
     body: CreateJobInput
   ) => Promise<{ ok: true; id: string } | { ok: false; error: string }>
+  complete: (
+    input: CompleteJobInput
+  ) => Promise<{ ok: true } | { ok: false; error: string }>
 }
 
 export function createJobsGateway(baseUrl: string): JobsGateway {
@@ -92,5 +96,37 @@ export function createJobsGateway(baseUrl: string): JobsGateway {
     return { ok: true, id }
   }
 
-  return { search, create }
+  async function complete(
+    input: CompleteJobInput
+  ): Promise<{ ok: true } | { ok: false; error: string }> {
+    const sp = new URLSearchParams()
+    sp.set('organizationId', input.organizationId)
+    const res = await fetch(
+      `${base}/api/Jobs/${encodeURIComponent(input.jobId)}/complete?${sp.toString()}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          assigneeId: input.assigneeId,
+          signatureUrl: input.signatureUrl,
+          completedAtUtc: input.completedAtUtc,
+        }),
+      }
+    )
+
+    if (res.status === 204) return { ok: true }
+    let msg = res.statusText
+    try {
+      const j = (await res.json()) as { error?: string }
+      if (j.error) msg = j.error
+    } catch {
+      /* ignore */
+    }
+    return { ok: false, error: msg }
+  }
+
+  return { search, create, complete }
 }

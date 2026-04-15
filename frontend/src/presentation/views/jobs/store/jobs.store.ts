@@ -35,6 +35,8 @@ type JobsStoreActions = {
   }) => void
   setSortConfig: (config: JobsSortConfig) => void
   toggleJobSelected: (id: string) => void
+  /** Optimistically mark job as completed; call rollback() if the mutation fails. */
+  applyOptimisticComplete: (jobId: string) => { rollback: () => void }
 }
 
 export type JobsStore = JobsStoreState & JobsStoreActions
@@ -98,7 +100,7 @@ export function selectSortConfig(state: JobsStore): JobsSortConfig {
   return state.sortConfig
 }
 
-export const useJobsStore = create<JobsStore>((set) => ({
+export const useJobsStore = create<JobsStore>((set, get) => ({
   jobs: [],
   selectedJobIds: [],
   filters: { ...defaultFilters },
@@ -134,4 +136,22 @@ export const useJobsStore = create<JobsStore>((set) => ({
           : [...state.selectedJobIds, id],
       }
     }),
+
+  applyOptimisticComplete: (jobId) => {
+    const prev = get().jobs.find((j) => j.id === jobId)
+    if (!prev) {
+      return { rollback: () => {} }
+    }
+    set((state) => ({
+      jobs: state.jobs.map((j) =>
+        j.id === jobId ? { ...j, status: 'Completed' as const } : j
+      ),
+    }))
+    return {
+      rollback: () =>
+        set((state) => ({
+          jobs: state.jobs.map((j) => (j.id === jobId ? prev : j)),
+        })),
+    }
+  },
 }))
