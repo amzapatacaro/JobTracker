@@ -1,0 +1,52 @@
+# Full stack for local runs (assessment submission guidelines).
+# Usage: docker compose up --build
+# Then open http://127.0.0.1:3000/jobs — API: http://127.0.0.1:5296/swagger
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: jobtracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - jobtracker-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jobtracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5296:5296"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5296
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;Port=5432;Database=jobtracker;Username=postgres;Password=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      JOBS_API_BASE_URL: http://api:5296
+      NEXT_PUBLIC_DEMO_ORGANIZATION_ID: a1000001-0000-4000-8000-000000000001
+      NEXT_PUBLIC_DEMO_CUSTOMER_ID: a1000001-0000-4000-8000-000000000002
+    depends_on:
+      - api
+
+volumes:
+  jobtracker-pgdata:
