@@ -56,6 +56,25 @@ describe('jobs store selectors', () => {
     expect(list[0].id).toBe('2')
   })
 
+  it('selectFilteredJobs respects UTC calendar date range', () => {
+    const state = useJobsStore.getState()
+    const early: Job = {
+      ...jobScheduled('early'),
+      scheduledDateUtc: '2026-06-01T12:00:00.000Z',
+    }
+    const late: Job = {
+      ...jobScheduled('late'),
+      scheduledDateUtc: '2026-06-20T12:00:00.000Z',
+    }
+    const mock = {
+      ...state,
+      jobs: [early, late],
+      filters: { statusFilter: '', fromDate: '2026-06-10', toDate: '2026-06-30' },
+    }
+    const list = selectFilteredJobs(mock)
+    expect(list.map((j) => j.id)).toEqual(['late'])
+  })
+
   it('selectSelectedCount', () => {
     const state = useJobsStore.getState()
     expect(

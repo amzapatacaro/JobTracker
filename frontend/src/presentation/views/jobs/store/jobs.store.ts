@@ -1,6 +1,11 @@
 import { create } from 'zustand'
 
 import type { Job } from '@/entities/job'
+import {
+  compareCalendarDateKeys,
+  scheduledInstantMs,
+  utcCalendarDateKeyFromIso,
+} from '@/shared/lib/date/utc-calendar-date'
 
 export type JobsFilters = {
   statusFilter: string
@@ -49,12 +54,17 @@ const defaultFilters: JobsFilters = {
 
 function jobMatchesFilters(job: Job, f: JobsFilters): boolean {
   if (f.statusFilter && job.status !== f.statusFilter) return false
-  if (f.fromDate && job.scheduledDateUtc) {
-    if (job.scheduledDateUtc.slice(0, 10) < f.fromDate) return false
+
+  if (!job.scheduledDateUtc) return true
+
+  const dayKey = utcCalendarDateKeyFromIso(job.scheduledDateUtc)
+  if (dayKey === null) {
+    if (f.fromDate || f.toDate) return false
+    return true
   }
-  if (f.toDate && job.scheduledDateUtc) {
-    if (job.scheduledDateUtc.slice(0, 10) > f.toDate) return false
-  }
+
+  if (f.fromDate && compareCalendarDateKeys(dayKey, f.fromDate) < 0) return false
+  if (f.toDate && compareCalendarDateKeys(dayKey, f.toDate) > 0) return false
   return true
 }
 
@@ -66,9 +76,12 @@ function compareJobs(a: Job, b: Job, field: NonNullable<JobsSortConfig>['field']
   if (field === 'status') {
     return sign * a.status.localeCompare(b.status)
   }
-  const av = a.scheduledDateUtc ?? ''
-  const bv = b.scheduledDateUtc ?? ''
-  return sign * av.localeCompare(bv)
+  const ta = scheduledInstantMs(a.scheduledDateUtc)
+  const tb = scheduledInstantMs(b.scheduledDateUtc)
+  if (ta === null && tb === null) return 0
+  if (ta === null) return sign * 1
+  if (tb === null) return sign * -1
+  return sign * (ta - tb)
 }
 
 /** Filtered + sorted list for the table (pure selector). */
