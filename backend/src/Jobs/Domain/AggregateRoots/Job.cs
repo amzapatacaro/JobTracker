@@ -2,13 +2,14 @@ using JobTracker.Jobs.Domain.Entities;
 using JobTracker.Jobs.Domain.Enums;
 using JobTracker.Jobs.Domain.Events;
 using JobTracker.Jobs.Domain.ValueObjects;
+using JobTracker.Shared.Domain;
 
 namespace JobTracker.Jobs.Domain.AggregateRoots;
 
 /// <summary>
 /// Aggregate root for a field job: scheduling, execution, completion, and cancellation.
 /// </summary>
-public sealed class Job : Shared.Domain.AggregateRoot
+public sealed class Job : AggregateRoot
 {
     private List<JobPhoto> _photos = [];
 
