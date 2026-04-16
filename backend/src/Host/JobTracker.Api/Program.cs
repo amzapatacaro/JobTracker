@@ -24,6 +24,8 @@ if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<JobTrackerDbContext>();
+    // Required before EnsureCreated creates gin_trgm_ops indexes on jobs.title / jobs.description.
+    await db.Database.ExecuteSqlRawAsync("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
     await db.Database.EnsureCreatedAsync();
 }
 

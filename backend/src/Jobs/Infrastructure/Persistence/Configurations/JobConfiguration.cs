@@ -68,5 +68,9 @@ public sealed class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.HasIndex(x => x.OrganizationId);
         builder.HasIndex(x => new { x.OrganizationId, x.Status });
         builder.HasIndex(x => new { x.OrganizationId, x.ScheduledDate });
+
+        // pg_trgm GIN: speeds ILIKE '%term%' on title/description (see database/jobs-schema.sql).
+        builder.HasIndex(x => x.Title).HasMethod("gin").HasOperators("gin_trgm_ops");
+        builder.HasIndex(x => x.Description).HasMethod("gin").HasOperators("gin_trgm_ops");
     }
 }

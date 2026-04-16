@@ -1,5 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS jobs;
 
+-- Substring search (ILIKE '%term%') on title/description: use trigram GIN instead of seq scans at scale.
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE TABLE jobs.jobs (
     id UUID NOT NULL,
     title VARCHAR(300) NOT NULL,
@@ -29,6 +32,10 @@ CREATE TABLE jobs.jobs (
 CREATE INDEX ix_jobs_organization_id ON jobs.jobs (organization_id);
 CREATE INDEX ix_jobs_organization_id_status ON jobs.jobs (organization_id, status);
 CREATE INDEX ix_jobs_organization_id_scheduled_date ON jobs.jobs (organization_id, scheduled_date);
+
+CREATE INDEX ix_jobs_title_trgm ON jobs.jobs USING gin (title gin_trgm_ops);
+
+CREATE INDEX ix_jobs_description_trgm ON jobs.jobs USING gin (description gin_trgm_ops);
 
 CREATE TABLE jobs.job_photos (
     id UUID NOT NULL,

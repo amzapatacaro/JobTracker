@@ -13,6 +13,19 @@ export default defineConfig({
     globals: false,
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     css: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'text-summary'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        '**/app/**',
+        '**/e2e/**',
+        '**/*.config.*',
+      ],
+      /* No global thresholds: most UI files are not unit-tested; see report for hooks/store. */
+    },
   },
   resolve: {
     alias: {

@@ -8,7 +8,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 namespace JobTracker.Jobs.Infrastructure.Persistence.Interceptors;
 
 /// <summary>
-/// On save, appends integration-event payloads to the outbox from aggregate domain events.
+/// Hooks into EF Core <see cref="DbContext.SaveChangesAsync"/> (see <see cref="SavingChangesAsync"/>): before the write,
+/// maps cleared domain events on aggregates to <see cref="OutboxMessage"/> rows. Aggregate persistence and outbox inserts
+/// therefore stay atomic: one commit succeeds or fails together.
 /// </summary>
 public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
 {
