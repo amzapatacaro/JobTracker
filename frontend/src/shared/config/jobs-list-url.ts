@@ -102,6 +102,12 @@ export function parseJobsListPage(raw: string | undefined): number {
   return Number.isFinite(n) && n >= 1 ? n : 1
 }
 
+export type ParsedJobsListSearchParams = {
+  page: number
+  pageSize: JobListPageSize
+  filters: JobsListUrlFilters
+}
+
 export function parseJobsListSearchParams(sp: {
   page?: string | string[]
   pageSize?: string | string[]
@@ -109,11 +115,7 @@ export function parseJobsListSearchParams(sp: {
   from?: string | string[]
   to?: string | string[]
   q?: string | string[]
-}): {
-  page: number
-  pageSize: JobListPageSize
-  filters: JobsListUrlFilters
-} {
+}): ParsedJobsListSearchParams {
   return {
     page: parseJobsListPage(firstParam(sp.page)),
     pageSize: parseJobListPageSize(firstParam(sp.pageSize)),
@@ -124,4 +126,10 @@ export function parseJobsListSearchParams(sp: {
       q: sp.q,
     }),
   }
+}
+
+/** Identity of the jobs list query; use for Suspense `key` / cache boundaries. */
+export function jobsListQueryCacheKey(input: ParsedJobsListSearchParams): string {
+  const { page, pageSize, filters } = input
+  return `${page}-${pageSize}-${filters.statusFilter}-${filters.fromDate}-${filters.toDate}-${filters.searchText}`
 }

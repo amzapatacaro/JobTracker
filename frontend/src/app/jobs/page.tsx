@@ -4,9 +4,12 @@ import { Suspense } from 'react'
 
 import { getListJobsUseCase } from '@/application/di/jobs-container'
 import { DEMO_ORGANIZATION_ID } from '@/shared/config/demo-tenant-ids'
+import type { JobListPageSize } from '@/shared/config/job-list-page-size'
 import {
   jobsListFiltersToApiQuery,
+  jobsListQueryCacheKey,
   parseJobsListSearchParams,
+  type JobsListUrlFilters,
 } from '@/shared/config/jobs-list-url'
 import { JobsClient, JobsListSkeleton } from '@/presentation/views/jobs'
 
@@ -27,8 +30,8 @@ async function JobsListSection({
   filters,
 }: {
   page: number
-  pageSize: number
-  filters: ReturnType<typeof parseJobsListSearchParams>['filters']
+  pageSize: JobListPageSize
+  filters: JobsListUrlFilters
 }) {
   const listJobs = getListJobsUseCase()
   const result = await listJobs({
@@ -51,8 +54,8 @@ async function JobsListSection({
 
 export default async function JobsPage({ searchParams }: JobsPageProps) {
   const sp = await searchParams
-  const { page, pageSize, filters } = parseJobsListSearchParams(sp)
-  const suspenseKey = `${page}-${pageSize}-${filters.statusFilter}-${filters.fromDate}-${filters.toDate}-${filters.searchText}`
+  const parsed = parseJobsListSearchParams(sp)
+  const suspenseKey = jobsListQueryCacheKey(parsed)
 
   return (
     <div className="box-border flex h-[100dvh] flex-col overflow-hidden overscroll-none px-4 py-8 sm:px-6 lg:px-8">
@@ -65,7 +68,11 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
           }
           key={suspenseKey}
         >
-          <JobsListSection page={page} pageSize={pageSize} filters={filters} />
+          <JobsListSection
+            page={parsed.page}
+            pageSize={parsed.pageSize}
+            filters={parsed.filters}
+          />
         </Suspense>
       </div>
     </div>
