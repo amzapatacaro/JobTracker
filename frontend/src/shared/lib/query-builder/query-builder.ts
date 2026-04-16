@@ -11,13 +11,13 @@ type DirSql<D extends 'asc' | 'desc'> = D extends 'asc' ? 'ASC' : 'DESC'
 
 export class QueryBuilder<
   TSchema,
-  TPick extends Pick<TSchema, keyof TPick & keyof TSchema>,
+  TKeys extends keyof TSchema & string,
   TQ extends string,
   TTable extends string,
 > {
   private constructor(
     private readonly tableName: TTable,
-    private readonly keys: readonly string[],
+    private readonly keys: readonly TKeys[],
     private readonly params: unknown[],
     private readonly whereArg: { field: string; value: unknown } | undefined,
     private readonly orderArg:
@@ -34,32 +34,32 @@ export class QueryBuilder<
     return {
       from<const Table extends string>(table: Table) {
         return {
-          select<const Keys extends readonly (keyof TSchema & string)[]>(
-            ...keys: Keys
+          select<const K extends readonly (keyof TSchema & string)[]>(
+            ...keys: K
           ): QueryBuilder<
             TSchema,
-            Pick<TSchema, Keys[number]>,
-            `SELECT ${StringJoin<Keys>} FROM ${Table}`,
+            K[number],
+            `SELECT ${StringJoin<K>} FROM ${Table}`,
             Table
           > {
             return new QueryBuilder<
               TSchema,
-              Pick<TSchema, Keys[number]>,
-              `SELECT ${StringJoin<Keys>} FROM ${Table}`,
+              K[number],
+              `SELECT ${StringJoin<K>} FROM ${Table}`,
               Table
-            >(table, [...keys], [], undefined, undefined, undefined)
+            >(table, keys, [], undefined, undefined, undefined)
           },
         }
       },
     }
   }
 
-  where<K extends keyof TPick & string>(
+  where<K extends TKeys>(
     field: K,
     _op: 'eq',
-    value: TPick[K]
-  ): QueryBuilder<TSchema, TPick, `${TQ} WHERE ${K} = ?`, TTable> {
-    return new QueryBuilder<TSchema, TPick, `${TQ} WHERE ${K} = ?`, TTable>(
+    value: TSchema[K]
+  ): QueryBuilder<TSchema, TKeys, `${TQ} WHERE ${K} = ?`, TTable> {
+    return new QueryBuilder<TSchema, TKeys, `${TQ} WHERE ${K} = ?`, TTable>(
       this.tableName,
       this.keys,
       [...this.params, value],
@@ -69,13 +69,13 @@ export class QueryBuilder<
     )
   }
 
-  orderBy<K extends keyof TPick & string, const D extends 'asc' | 'desc'>(
+  orderBy<K extends TKeys, const D extends 'asc' | 'desc'>(
     field: K,
     direction: D
-  ): QueryBuilder<TSchema, TPick, `${TQ} ORDER BY ${K} ${DirSql<D>}`, TTable> {
+  ): QueryBuilder<TSchema, TKeys, `${TQ} ORDER BY ${K} ${DirSql<D>}`, TTable> {
     return new QueryBuilder<
       TSchema,
-      TPick,
+      TKeys,
       `${TQ} ORDER BY ${K} ${DirSql<D>}`,
       TTable
     >(
@@ -90,8 +90,8 @@ export class QueryBuilder<
 
   limit<const N extends number>(
     n: N
-  ): QueryBuilder<TSchema, TPick, `${TQ} LIMIT ${N}`, TTable> {
-    return new QueryBuilder<TSchema, TPick, `${TQ} LIMIT ${N}`, TTable>(
+  ): QueryBuilder<TSchema, TKeys, `${TQ} LIMIT ${N}`, TTable> {
+    return new QueryBuilder<TSchema, TKeys, `${TQ} LIMIT ${N}`, TTable>(
       this.tableName,
       this.keys,
       this.params,
@@ -102,9 +102,10 @@ export class QueryBuilder<
   }
 
   /**
-   * Runtime SQL string; typed as accumulated template literal {@link TQ}.
+   * Runtime SQL string. The type-level query shape is tracked on the class as {@link TQ};
+   * the built value is a `string` so we do not need unsound assertions.
    */
-  build(): { query: TQ; params: unknown[] } {
+  build(): { query: string; params: unknown[] } {
     const cols = this.keys.join(', ')
     let sql = `SELECT ${cols} FROM ${this.tableName}`
     const params = [...this.params]
@@ -117,6 +118,6 @@ export class QueryBuilder<
     if (this.limitArg !== undefined) {
       sql += ` LIMIT ${this.limitArg}`
     }
-    return { query: sql as TQ, params }
+    return { query: sql, params }
   }
 }
