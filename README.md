@@ -1,69 +1,41 @@
 # JobTracker
 
-Field-service style job tracking. This repository currently includes the **.NET backend**; other clients or services may be added later.
+Small field-service style job tracker: **.NET 9** API + **Next.js 15**
+Overview diagram: `docs/system-design.md`.
 
-## TypeScript Deep Dive
+## Setup
 
-Implementation of assessment **Part 1** (see `technical-assessment-fullstack-senior.md`, sections 1.1–1.3). Frontend code is under `frontend/` with TypeScript **`strict`** (`frontend/tsconfig.json`). Check types with:
+### Docker (full stack)
+
+[Docker](https://docs.docker.com/get-docker/) with Compose v2:
 
 ```bash
-cd frontend && npm run typecheck
+docker compose up --build
 ```
 
-### 1.1 Generic constraints and conditional types
+| Service       | URL                                                                           |
+| ------------- | ----------------------------------------------------------------------------- |
+| Web           | http://127.0.0.1:3000/jobs                                                    |
+| API / Swagger | http://127.0.0.1:5296/swagger                                                 |
+| Postgres      | `localhost:5432`, user `postgres`, password `postgres`, database `jobtracker` |
 
-| Deliverable | Location |
-| ----------- | -------- |
-| `DeepReadonly<T>` — nested readonly objects, `ReadonlyArray`, `ReadonlyMap`, `ReadonlySet`; primitives unchanged | `frontend/src/shared/lib/typescript/deep-readonly.ts` |
-| `PathKeys<T>` — dot-notation paths to leaf properties | `frontend/src/shared/lib/typescript/path-keys.ts` |
-| `createTypedEventEmitter<Events>()` — `.on` / `.emit` / `.off` with payload types tied to event names; no `any` | `frontend/src/shared/lib/typescript/typed-event-emitter.ts` |
+First run creates the `jobs` schema via `EnsureCreated()` in Development. `docker compose down` stops containers; `-v` removes the Postgres volume.
 
-Barrel: `frontend/src/shared/lib/typescript/index.ts` (also re-exported from `frontend/src/shared/lib/index.ts` as `@/shared/lib`).
+### Frontend (without Docker)
 
-### 1.2 Type-safe `QueryBuilder`
+```bash
+cd frontend && npm install && npm run dev
+```
 
-| Requirement | How it is implemented |
-| ----------- | ---------------------- |
-| Chaining with inferred type at each step | `frontend/src/shared/lib/query-builder/query-builder.ts` |
-| After `.select`, `.where` / `.orderBy` only allow keys from the current projection; `.where` value must match the field type | Same |
-| Template literal type for the accumulated SQL string | Same |
-| No `any` / `as unknown as` | Same (`build()` uses `as TQ` only to align the runtime string with the accumulated literal type) |
+Copy `frontend/.env.example` → `frontend/.env.local` (API URL + demo org/customer IDs).
 
-API shape (table name is explicit at runtime and literal-typed):  
-`QueryBuilder.create<YourSchema>().from('your_table').select('col', ...).where(...).orderBy(...).limit(...).build()`.
+TypeScript utilities live under `frontend/src/`. `npm run typecheck`.
 
-### 1.3 Discriminated unions and exhaustive matching
+More: `docs/frontend-architecture.md`.
 
-| Deliverable | Location |
-| ----------- | -------- |
-| `JobState` union (Draft, Scheduled, InProgress, Completed, Cancelled) with distinct payloads | `frontend/src/entities/job/model/job-state.ts` |
-| `transitionJob` — valid transitions enforced with overloads; invalid transitions are type errors | Same |
-| `getJobSummary` — exhaustive `switch` with `never` for the default branch | Same |
+### Backend (without Docker)
 
-## Backend (.NET)
-
-### Prerequisites
-
-- [.NET 9 SDK](https://dotnet.microsoft.com/download)
-- [PostgreSQL](https://www.postgresql.org/) reachable with a database and user you configure (defaults below assume local Postgres)
-
-### Solution layout
-
-| Project                          | Role                                                  |
-| -------------------------------- | ----------------------------------------------------- |
-| `JobTracker.Api`                 | ASP.NET Core host, Swagger, pipeline                  |
-| `JobTracker.Jobs.Domain`         | Aggregates, value objects, domain events              |
-| `JobTracker.Jobs.Application`    | Commands/queries, MediatR handlers, FluentValidation  |
-| `JobTracker.Jobs.Infrastructure` | EF Core, repositories, Hangfire, transactional outbox |
-| `JobTracker.Jobs.Presentation`   | API controllers and DTOs for the Jobs module          |
-| `JobTracker.Jobs.Integration`    | Integration event contracts (outbox payloads)         |
-| `JobTracker.Shared`              | Shared primitives (`Result`, domain base types)       |
-
-Solution file: `backend/JobTracker.sln`.
-
-### Run the API
-
-From the repository root:
+[.NET 9 SDK](https://dotnet.microsoft.com/download) + Postgres (defaults in `appsettings` assume local).
 
 ```bash
 cd backend
@@ -71,39 +43,67 @@ dotnet restore
 dotnet run --project src/Host/JobTracker.Api/JobTracker.Api.csproj
 ```
 
-Development URLs (see `launchSettings.json`): **[https://localhost:7167](https://localhost:7167)** and **[http://localhost:5296](http://localhost:5296)**.
+URLs: https://localhost:7167 and http://localhost:5296 (`launchSettings.json`).
 
-In **Development**, the app calls `EnsureCreated()` so the schema is created on startup if it does not exist. Use a proper migration strategy for production.
+Projects: `JobTracker.Api`, `Jobs.Domain` / `Application` / `Infrastructure` / `Presentation`, `Jobs.Integration`, `Shared`. Detail: `docs/backend-architecture.md`.
 
-### Configuration
+| Method | Route                                |
+| ------ | ------------------------------------ |
+| POST   | `/api/Jobs`                          |
+| POST   | `/api/Jobs/{id}/start`               |
+| POST   | `/api/Jobs/{id}/complete`            |
+| GET    | `/api/Jobs` (needs `organizationId`) |
 
-Connection string key: **`ConnectionStrings:DefaultConnection`** (nested configuration key in .NET).
+Swagger: `/swagger` in Development. Hangfire + outbox use the same DB (invoice/notify handlers are stubs).
 
-Default in `appsettings.json`:
+## Database
 
-`Host=localhost;Port=5432;Database=jobtracker;Username=postgres;Password=postgres`
+`database/jobs-schema.sql` mirrors what EF creates. Notes: `docs/database-design.md`.
 
-Override with environment variables, user secrets, or your own `appsettings.*.json` as needed.
+## Tests
 
-### HTTP API (Jobs)
+**Frontend (Vitest)** — assessment text says “Jest” but `expectTypeOf` is a Vitest-style API; this repo uses Vitest.
 
-Base route: `**/api/Jobs**`
+```bash
+cd frontend && npm run test:run
+```
 
-| Method | Path                         | Summary                                                  |
-| ------ | ---------------------------- | -------------------------------------------------------- |
-| `POST` | `/api/Jobs`                  | Create job (optional schedule + assignee)                |
-| `POST` | `/api/Jobs/{jobId}/start`    | Start a scheduled job                                    |
-| `POST` | `/api/Jobs/{jobId}/complete` | Complete with signature                                  |
-| `GET`  | `/api/Jobs`                  | Search/list (paging, filters, `organizationId` required) |
+**E2E (Playwright)** — `frontend/e2e/`, `data-testid` selectors. Config uses separate ports so it doesn’t fight your dev server; tests may call `POST .../start` if there’s no Start button in the UI yet.
 
-### Swagger
+```bash
+cd frontend
+npx playwright install chromium
+npm run test:e2e
+```
 
-With `ASPNETCORE_ENVIRONMENT=Development`, OpenAPI and Swagger UI are enabled at `**/swagger**`.
+**Backend (xUnit)**
 
-### Background jobs and outbox
+```bash
+cd backend && dotnet test tests/JobTracker.Jobs.Tests/JobTracker.Jobs.Tests.csproj
+```
 
-**Hangfire** uses the same PostgreSQL database. Domain changes that raise certain events enqueue rows in an **outbox** table; a **recurring job** dispatches those messages (stubs today, extensible for billing, notifications, etc.).
+## CI
 
----
+`.github/workflows/ci.yml` — frontend typecheck/tests/build, `dotnet test`, `docker compose build`.
 
-For the full-stack assessment brief, see `technical-assessment-fullstack-senior.md` in the repo root.
+## Architectural decisions and trade-offs
+
+- **Modular monolith:** one API and one Postgres instead of microservices—easier to run and submit; Jobs is a vertical slice with clear layers and an **outbox** so other modules (e.g. billing) could react later without tight coupling.
+- **Next.js App Router:** initial job list is loaded on the **server** (use case + gateway); the client uses **Zustand** only for UI state (filters, selection, optimistic complete with rollback). **Server Actions** are used for mutations only.
+- **No real auth** in this sample; `organizationId` / demo UUIDs come from env for local use.
+- **Development DB:** `EnsureCreated()` is fine for dev; production would need proper migrations.
+- **Job search in the API:** simple `ILIKE` + offset pagination—enough for the exercise; heavier search would be a separate iteration.
+
+**Assumptions:** reviewers can run Docker or install .NET 9 + Node locally; Postgres is available where the connection string points.
+
+## What I would improve with more time
+
+- **Start job in the UI** — wire `POST /api/Jobs/{id}/start` to a button so users (and E2E) don’t rely on calling the API directly from tests.
+- **Job detail page** — flesh out `/jobs/[jobId]` with a real **GET job by id** on the API and show full fields, history, photos, etc.
+- **Latitude / longitude** — capture or resolve location properly (e.g. geocode the address on create/edit, or a map picker) instead of only storing the address text; the schema already has `latitude` / `longitude` columns for that.
+- **Migrations** for production (EF migrations or SQL scripts) instead of only `EnsureCreated()` in dev.
+- **Auth and real tenants**; **real assignees** instead of the mock list; broader **tests/coverage** in CI if needed.
+
+## Repo layout
+
+`frontend/`, `backend/`, `docker-compose.yml` at the root.
