@@ -1,0 +1,8 @@
+@host = http://localhost:5296
+@org = 25f6c550-98bf-4810-aa9e-4a1957bcd54a
+
+### Search jobs
+GET {{host}}/api/jobs?organizationId={{org}}&page=1&pageSize=10
+Accept: application/json
+
+###

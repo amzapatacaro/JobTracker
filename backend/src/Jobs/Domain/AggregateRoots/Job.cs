@@ -1,0 +1,166 @@
+using JobTracker.Jobs.Domain.Entities;
+using JobTracker.Jobs.Domain.Enums;
+using JobTracker.Jobs.Domain.Events;
+using JobTracker.Jobs.Domain.ValueObjects;
+using JobTracker.Shared.Domain;
+
+namespace JobTracker.Jobs.Domain.AggregateRoots;
+
+/// <summary>
+/// Aggregate root for a field job: scheduling, execution, completion, and cancellation.
+/// </summary>
+public sealed class Job : AggregateRoot
+{
+    private List<JobPhoto> _photos = [];
+
+    public string Title { get; private set; } = null!;
+    public string Description { get; private set; } = null!;
+    public Address Address { get; private set; } = null!;
+    public JobStatus Status { get; private set; }
+    public DateTime? ScheduledDate { get; private set; }
+    public Guid? AssigneeId { get; private set; }
+    public Guid CustomerId { get; private set; }
+    public Guid OrganizationId { get; private set; }
+    public string? Notes { get; private set; }
+    public DateTime? StartedAt { get; private set; }
+    public DateTime? CompletedAt { get; private set; }
+    public string? SignatureUrl { get; private set; }
+    public DateTime? CancelledAt { get; private set; }
+    public string? CancelReason { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
+
+    /// <summary>
+    /// Parameterless constructor for ORM materialization.
+    /// </summary>
+    private Job() { }
+
+    /// <summary>Creates a new draft job for the organization and customer.</summary>
+    public static Job CreateDraft(
+        Guid organizationId,
+        string title,
+        string description,
+        Address address,
+        Guid customerId,
+        string? notes
+    )
+    {
+        var now = DateTime.UtcNow;
+        var job = new Job
+        {
+            Id = Guid.NewGuid(),
+            OrganizationId = organizationId,
+            Title = title,
+            Description = description,
+            Address = address,
+            CustomerId = customerId,
+            Status = JobStatus.Draft,
+            Notes = notes,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        return job;
+    }
+
+    /// <summary>Raises <see cref="JobCreatedDomainEvent"/> after persistence (e.g. for outbox).</summary>
+    public void EmitCreatedDomainEvent() =>
+        RaiseDomainEvent(new JobCreatedDomainEvent(Id, OrganizationId, AssigneeId));
+
+    public IReadOnlyList<JobPhoto> Photos => _photos;
+
+    /// <summary>Adds a photo to a non-terminal job.</summary>
+    public void AddPhoto(string url, DateTime capturedAtUtc, string? caption)
+    {
+        EnsureNotTerminal();
+        if (string.IsNullOrWhiteSpace(url))
+            throw new ArgumentException("Photo URL is required.", nameof(url));
+
+        _photos.Add(new JobPhoto(Guid.NewGuid(), Id, url.Trim(), capturedAtUtc, caption));
+        Touch();
+    }
+
+    /// <summary>Moves a draft job to scheduled with assignee and date.</summary>
+    public void Schedule(DateTime scheduledDateUtc, Guid assigneeId)
+    {
+        EnsureNotTerminal();
+        if (Status != JobStatus.Draft)
+            throw new InvalidOperationException("Only draft jobs can be scheduled.");
+
+        if (scheduledDateUtc.Date < DateTime.UtcNow.Date)
+            throw new InvalidOperationException("A job cannot be scheduled in the past.");
+
+        Status = JobStatus.Scheduled;
+        ScheduledDate = scheduledDateUtc;
+        AssigneeId = assigneeId;
+        Touch();
+    }
+
+    /// <summary>Moves a scheduled job to in progress.</summary>
+    public void Start(DateTime startedAtUtc)
+    {
+        EnsureNotTerminal();
+        if (Status != JobStatus.Scheduled)
+            throw new InvalidOperationException("Only scheduled jobs can move to in progress.");
+
+        Status = JobStatus.InProgress;
+        StartedAt = startedAtUtc;
+        Touch();
+    }
+
+    /// <summary>
+    /// Completes the job. If there is no assignee yet, <paramref name="assigneeId"/> is applied; otherwise the existing assignee is unchanged.
+    /// </summary>
+    public void Complete(DateTime completedAtUtc, string signatureUrl, Guid assigneeId)
+    {
+        EnsureNotTerminal();
+        if (Status != JobStatus.InProgress)
+            throw new InvalidOperationException("Only in-progress jobs can be completed.");
+
+        if (AssigneeId is null)
+            AssigneeId = assigneeId;
+
+        Status = JobStatus.Completed;
+        CompletedAt = completedAtUtc;
+        SignatureUrl = signatureUrl;
+        RaiseDomainEvent(
+            new JobCompletedDomainEvent(
+                Id,
+                OrganizationId,
+                CustomerId,
+                AssigneeId.Value,
+                completedAtUtc
+            )
+        );
+        Touch();
+    }
+
+    /// <summary>Cancels a scheduled or in-progress job.</summary>
+    public void Cancel(DateTime cancelledAtUtc, string reason)
+    {
+        EnsureNotTerminal();
+        if (Status is not (JobStatus.Scheduled or JobStatus.InProgress))
+            throw new InvalidOperationException(
+                "Only scheduled or in-progress jobs can be cancelled."
+            );
+
+        Status = JobStatus.Cancelled;
+        CancelledAt = cancelledAtUtc;
+        CancelReason = reason;
+        RaiseDomainEvent(new JobCancelledDomainEvent(Id, OrganizationId, cancelledAtUtc, reason));
+        Touch();
+    }
+
+    /// <summary>
+    /// Ensures the job is not completed or cancelled before a state change.
+    /// </summary>
+    private void EnsureNotTerminal()
+    {
+        if (Status is JobStatus.Completed or JobStatus.Cancelled)
+            throw new InvalidOperationException("Job is in a terminal state and cannot change.");
+    }
+
+    /// <summary>
+    /// Sets <see cref="UpdatedAt"/> to the current UTC time after a mutation.
+    /// </summary>
+    private void Touch() => UpdatedAt = DateTime.UtcNow;
+}

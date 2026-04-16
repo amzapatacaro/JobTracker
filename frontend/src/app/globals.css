@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+@import '../shared/ui/job-ui.css';
+
+@layer components {
+  /* Native <select>: hide OS chevron, draw a neutral chevron aligned with form controls */
+  .select-native {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 2.35rem !important; /* beats Tailwind px-* on the same node */
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2371717a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.75' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1.125rem 1.125rem;
+    cursor: pointer;
+  }
+}
