@@ -58,20 +58,26 @@ export function useCompleteJob() {
     const { rollback } = useJobsStore
       .getState()
       .applyOptimisticComplete(jobId)
-    const result = await completeJobAction({
-      jobId,
-      organizationId: DEMO_ORGANIZATION_ID,
-      assigneeId: trimmedAssignee,
-      signatureUrl: signatureUrl.trim(),
-      completedAtUtc: iso,
-    })
-    setSubmitting(false)
-    if (!result.ok) {
+    try {
+      const result = await completeJobAction({
+        jobId,
+        organizationId: DEMO_ORGANIZATION_ID,
+        assigneeId: trimmedAssignee,
+        signatureUrl: signatureUrl.trim(),
+        completedAtUtc: iso,
+      })
+      if (!result.ok) {
+        rollback()
+        setError(result.error)
+        return
+      }
+      closeModal()
+    } catch (e) {
       rollback()
-      setError(result.error)
-      return
+      setError(e instanceof Error ? e.message : 'Could not complete the job.')
+    } finally {
+      setSubmitting(false)
     }
-    closeModal()
   }, [
     jobId,
     assigneeId,
