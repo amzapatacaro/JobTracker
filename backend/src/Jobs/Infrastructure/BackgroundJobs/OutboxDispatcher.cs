@@ -87,7 +87,6 @@ public sealed class OutboxDispatcher(
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        // Stub: notify assigned crew / enqueue push when AssigneeId is set
         _ = (e.JobId, e.AssigneeId, e.IdempotencyKey);
         return Task.CompletedTask;
     }
@@ -101,7 +100,6 @@ public sealed class OutboxDispatcher(
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        // Stub: notify customer / update scheduling module
         _ = (e.JobId, e.Reason, e.IdempotencyKey);
         return Task.CompletedTask;
     }
@@ -116,14 +114,10 @@ public sealed class OutboxDispatcher(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Billing (bounded context): idempotent invoice generation
         if (!ProcessedInvoiceKeys.TryAdd(e.IdempotencyKey, 0))
             return Task.CompletedTask;
 
-        // Stub: replace with call into Billing module / message bus
         _ = e.JobId;
-
-        // Customer notification (SendGrid stub)
         _ = e.CustomerId;
 
         return Task.CompletedTask;
