@@ -1,81 +1,151 @@
 # System design
 
-High-level view of JobTracker. More detail: `docs/frontend-architecture.md`, `docs/backend-architecture.md`, `docs/database-design.md`.
+High-level JobTracker view. Deeper layer notes: `docs/frontend-architecture.md`, `docs/backend-architecture.md`, `docs/database-design.md`. Covers **Section 6 — System Design and Principles**.
 
-## Diagram
+---
+
+## Architecture diagram
 
 ```
   Browser
      |
      v
-+---------------------------+     JOBS_API_BASE_URL (server)      +---------------------------+
-| Next.js 15 (App Router)   | ---------------------------------> | ASP.NET Core (Host)       |
-| app/jobs (RSC)            |     JSON /api/Jobs                  | JobTracker.Api            |
-|   -> use case / gateway   |                                   +-------------+-------------+
-|   -> <JobsClient />       |                                                 |
-|       'use client'        |                                                 v
-|       Zustand, modals     |                                   +---------------+---------------+
-|       Server Actions      |                                   | Presentation (controllers)   |
-+---------------------------+                                   +---------------+---------------+
-                                                                              |
-                                                                              v
-                                                            +-----------------+-----------------+
-                                                            | Application (MediatR)            |
-                                                            +-----------------+-----------------+
-                                                                            |
-                                                                            v
-                                                            +-----------------+-----------------+
-                                                            | Domain                           |
-                                                            +-----------------+-----------------+
-                                                                            ^
-                                                                            |
-                                                            +-----------------+-----------------+
-                                                            | Infrastructure                 |
-                                                            | EF, repos, UoW, Hangfire, outbox |
-                                                            +-----------------+-----------------+
-                                                                            |
-                                                                            v
-                                                            +-----------------+-----------------+
-                                                            | PostgreSQL (schema `jobs`)     |
-                                                            +---------------------------------+
++------------------------------------------------------------------+
+| Next.js 15 (App Router)                                          |
+|  [Server Components] app/jobs/page.tsx -> use case + gateway     |
+|  [Server Actions] app/jobs/actions.ts (create / complete)        |
+|  [Client] JobsClient, hooks, Zustand — filters, optimistic complete|
++------------------------------------------------------------------+
+        | JSON
+        v
++---------------------------+     +-----------------------------+
+| ASP.NET Core Host         |     | Cross-cutting               |
+| JobsController            |     | Tenant: org on all queries  |
++---------------------------+     | Auth: n/a (local dev)       |
+        | MediatR               | Errors: Result<T> + FluentValidation |
+        v                         +-----------------------------+
++---------------------------+
+| Application (handlers,    |
+| validators)               |
++---------------------------+
+        v
++---------------------------+
+| Domain (Job, VOs, events) |
++---------------------------+
+        ^
+        |
++---------------------------+     Same DbContext transaction
+| Infrastructure            | ------------------+
+| EF Core, JobRepository,   |                   v
+| IUnitOfWork,              |     +---------------------------+
+| InsertOutboxMessages...   |     | PostgreSQL                |
++---------------------------+     | schema `jobs` + outbox    |
+        |                         | Hangfire tables (dev)     |
+        v                         | future `billing` schema   |
++---------------------------+     | (no tight FK into jobs)   |
+| Hangfire recurring job    |     +---------------------------+
+| -> OutboxDispatcher       |
+|     deserialize JSON      |
+|     stub handlers:        |
+|      customer / notify    |
++---------------------------+
 
-Outbox (same transaction as save) --> Hangfire --> OutboxDispatcher --> handlers read pending rows
+Async path (at-least-once, eventually consistent): domain event on the aggregate ->
+interceptor maps to integration payload -> INSERT `jobs.outbox_messages` in the same
+transaction as the job -> Hangfire runs `OutboxDispatcher` -> handlers (stubs today) ->
+`ProcessedOn` set; replays rely on `IdempotencyKey` in integration contracts.
 ```
 
-## Flow
+---
 
-- **Frontend:** Server Component loads the list; client keeps filters/sort/selection in Zustand; Server Actions only for create/complete. No Start action in the UI yet — E2E can call `POST /api/Jobs/{id}/start`.
-- **Backend:** Controllers → MediatR → handlers → domain + repositories. Integration event shapes live in `JobTracker.Jobs.Integration` and go through the outbox.
-- **Async:** Domain events → EF interceptor writes outbox rows → Hangfire polls and runs the dispatcher.
+## SOLID (examples from this codebase)
 
-## Cross-cutting
 
-- **Tenant:** `organizationId` on jobs + required on list/create; demo values from env.
-- **Auth:** none (local dev only).
-- **Errors:** FluentValidation + `Result<T>` on the server; modals show failures on the client.
+| Principle | Where                                                  | How it applies                                                    |
+| --------- | ------------------------------------------------------ | ----------------------------------------------------------------- |
+| **S**     | `CreateJobCommandHandler`, `CreateJobCommandValidator` | One use case per handler; validation not in the controller.       |
+| **O**     | New `Application/Features/`* + MediatR handlers        | Add behavior by extension rather than editing unrelated handlers. |
+| **L**     | `IRequestHandler<,>` implementations                   | Handlers are interchangeable in the pipeline.                     |
+| **I**     | `IJobRepository`, `IUnitOfWork`                        | Narrow persistence ports.                                         |
+| **D**     | Handlers on interfaces; EF in Infrastructure           | Inner layers do not reference EF Core.                            |
 
-## Consistency
 
-- Writes: one transaction for aggregate + outbox row.
-- Side effects after outbox: eventually consistent; consumers should be idempotent.
-- UI: optimistic complete with rollback in `jobs.store.ts` if the API fails.
+---
 
-## Principles (examples in code)
+## GRASP (examples)
 
-| SOLID / GRASP | Example |
-| ------------- | ------- |
-| Single responsibility | One handler per command/query |
-| Dependency inversion | `IJobRepository`, `IUnitOfWork`; gateway on the client |
-| Information expert | Rules on `Job` methods |
-| Mediator | MediatR |
 
-## Patterns (sample)
+| GRASP                  | Where                             | How it applies                                    |
+| ---------------------- | --------------------------------- | ------------------------------------------------- |
+| **Information Expert** | `Job` (`Schedule`, `Complete`, …) | Invariants on the object that owns the state.     |
+| **Controller**         | `JobsController` + MediatR        | HTTP translates to application messages only.     |
+| **Low Coupling**       | `Jobs.Integration` + outbox stubs | No direct Billing dependency in the domain.       |
+| **High Cohesion**      | `Features/Create/` folder         | Create command, handler, validator stay together. |
+| **Creator**            | `Job.CreateDraft`                 | One place to construct a valid new aggregate.     |
 
-| Pattern | Where |
-| -------- | ----- |
-| Repository / UoW | `IJobRepository`, `JobRepository`, `IUnitOfWork` |
-| Observer | Domain events + outbox |
-| Command | CQRS commands |
-| Factory | `Job.CreateDraft` |
-| Builder (TS) | `query-builder.ts` |
-| State (TS) | `JobState` + `transitionJob` |
+
+---
+
+## Idempotency
+
+
+| Location           | Mechanism                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| Integration events | `IdempotencyKey` on e.g. `JobCompletedIntegrationEvent`.                            |
+| Outbox dispatcher  | In-memory dedupe stub for invoice path; production should persist keys.             |
+| Domain             | `Job.Complete` blocks invalid transitions so duplicate completions are not emitted. |
+
+
+---
+
+## Eventual consistency
+
+Aggregate save and `InsertOutboxMessagesInterceptor` commit **outbox rows in the same transaction**. Hangfire runs `OutboxDispatcher` afterward. **Domain events** stay internal; **integration events** are the serialized contract in the outbox.
+
+---
+
+## Bounded context
+
+
+| Context            | Responsibility                | Communication                                                      |
+| ------------------ | ----------------------------- | ------------------------------------------------------------------ |
+| **Jobs**           | Lifecycle, rules, persistence | Publishes via outbox only.                                         |
+| **Billing** (stub) | Post-completion invoicing     | Would consume `JobCompletedIntegrationEvent`; separate data model. |
+
+
+---
+
+## Open Host Service (OHS)
+
+`JobTracker.Jobs.Integration` publishes stable DTOs (`JobCreatedIntegrationEvent`, …). External modules depend on those types, not on EF entities. Mapping from domain events happens in `InsertOutboxMessagesInterceptor`.
+
+---
+
+## GoF patterns (≥5)
+
+
+| Pattern            | Where used                                         | Problem solved                                         |
+| ------------------ | -------------------------------------------------- | ------------------------------------------------------ |
+| **Repository**     | `IJobRepository` + `JobRepository`                 | Persistence abstraction and tests.                     |
+| **Unit of Work**   | `IUnitOfWork` + EF                                 | Atomic writes for aggregate + outbox.                  |
+| **Mediator**       | MediatR                                            | Controllers do not reference each handler.             |
+| **Observer**       | Domain events + interceptor                        | Aggregate decoupled from outbox/Hangfire.              |
+| **Command**        | `CreateJobCommand`, …                              | CQRS writes as objects.                                |
+| **Factory method** | `Job.CreateDraft`                                  | Controlled construction.                               |
+| **Strategy**       | FluentValidation per command                       | Per-command validation without changing handler shape. |
+| **State**          | `transitionJob` (frontend); `Job` guards (backend) | Valid status transitions.                              |
+| **Builder (TS)**   | `shared/lib/query-builder/query-builder.ts`        | Safe composition of list URLs.                         |
+
+
+---
+
+## Quick pointers
+
+
+| Topic       | Summary                                                                             |
+| ----------- | ----------------------------------------------------------------------------------- |
+| Frontend    | RSC list → Zustand + filters → Server Actions for mutations                         |
+| Backend     | Controllers → MediatR → domain + repos                                              |
+| Consistency | Single tx for job + outbox; optimistic UI complete with rollback in `jobs.store.ts` |
+
+
