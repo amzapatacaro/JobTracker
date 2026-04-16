@@ -24,6 +24,7 @@ type JobsPageProps = {
   }>
 }
 
+/** Server fragment: loads one page of jobs for the URL and renders the client shell. */
 async function JobsListSection({
   page,
   pageSize,
@@ -52,6 +53,7 @@ async function JobsListSection({
   )
 }
 
+/** Jobs list route: parses URL, Suspense boundary keyed by query, server-fetches one page. */
 export default async function JobsPage({ searchParams }: JobsPageProps) {
   const sp = await searchParams
   const parsed = parseJobsListSearchParams(sp)

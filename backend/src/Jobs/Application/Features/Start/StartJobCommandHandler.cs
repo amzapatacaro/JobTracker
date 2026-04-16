@@ -15,6 +15,7 @@ internal sealed class StartJobCommandHandler(
     StartJobCommandValidator validator
 ) : IRequestHandler<StartJobCommand, Result<Unit>>
 {
+    /// <summary>Loads job and transitions to in progress; persists on success.</summary>
     public async Task<Result<Unit>> Handle(
         StartJobCommand request,
         CancellationToken cancellationToken

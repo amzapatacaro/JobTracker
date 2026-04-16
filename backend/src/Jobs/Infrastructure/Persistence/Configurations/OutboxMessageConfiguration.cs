@@ -8,6 +8,7 @@ namespace JobTracker.Jobs.Infrastructure.Persistence.Configurations;
 /// </summary>
 public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
 {
+    /// <summary>Maps the transactional outbox table.</summary>
     public void Configure(EntityTypeBuilder<OutboxMessage> builder)
     {
         builder.ToTable("outbox_messages");

@@ -14,6 +14,7 @@ public sealed class JobPhoto : Entity
 
     private JobPhoto() { }
 
+    /// <summary>Creates a photo row linked to a job (ORM and aggregate use).</summary>
     internal JobPhoto(Guid id, Guid jobId, string url, DateTime capturedAt, string? caption)
     {
         Id = id;

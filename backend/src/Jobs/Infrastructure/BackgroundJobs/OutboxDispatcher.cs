@@ -18,6 +18,7 @@ public sealed class OutboxDispatcher(
 {
     private static readonly ConcurrentDictionary<string, byte> ProcessedInvoiceKeys = new();
 
+    /// <summary>Fetches a batch of unprocessed outbox messages, dispatches them, and marks processed.</summary>
     public async Task ProcessPendingMessagesAsync(CancellationToken cancellationToken = default)
     {
         await using var scope = scopeFactory.CreateAsyncScope();

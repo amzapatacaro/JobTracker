@@ -11,6 +11,7 @@ namespace JobTracker.Jobs.Infrastructure.Persistence.Configurations;
 /// </summary>
 public sealed class JobConfiguration : IEntityTypeConfiguration<Job>
 {
+    /// <summary>Maps the <see cref="Job"/> table, owned address, and photo collection.</summary>
     public void Configure(EntityTypeBuilder<Job> builder)
     {
         builder.ToTable("jobs");

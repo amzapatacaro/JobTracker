@@ -5,6 +5,7 @@ export type JobListPageSize = (typeof JOB_LIST_PAGE_SIZES)[number]
 
 export const DEFAULT_JOB_LIST_PAGE_SIZE: JobListPageSize = 10
 
+/** Parses `pageSize` query; falls back to the default constant if invalid. */
 export function parseJobListPageSize(
   raw: string | undefined
 ): JobListPageSize {

@@ -13,6 +13,7 @@ public sealed class JobTrackerDbContext(DbContextOptions<JobTrackerDbContext> op
     public DbSet<JobPhoto> JobPhotos => Set<JobPhoto>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
+    /// <summary>Applies schema name <c>jobs</c> and all EF configurations from this assembly.</summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("jobs");

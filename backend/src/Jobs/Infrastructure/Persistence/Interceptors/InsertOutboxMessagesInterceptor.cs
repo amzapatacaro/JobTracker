@@ -12,6 +12,7 @@ namespace JobTracker.Jobs.Infrastructure.Persistence.Interceptors;
 /// </summary>
 public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
 {
+    /// <summary>Translates domain events on aggregates into outbox rows before save.</summary>
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
@@ -97,12 +98,14 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
+    /// <summary>Clears domain events from aggregates after a successful save.</summary>
     public override int SavedChanges(SaveChangesCompletedEventData eventData, int result)
     {
         ClearAggregateEvents(eventData.Context);
         return base.SavedChanges(eventData, result);
     }
 
+    /// <summary>Async counterpart of <see cref="SavedChanges"/>.</summary>
     public override ValueTask<int> SavedChangesAsync(
         SaveChangesCompletedEventData eventData,
         int result,
@@ -113,6 +116,7 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
         return base.SavedChangesAsync(eventData, result, cancellationToken);
     }
 
+    /// <summary>Removes processed domain events from tracked <see cref="AggregateRoot"/> entities.</summary>
     private static void ClearAggregateEvents(DbContext? context)
     {
         if (context is null)

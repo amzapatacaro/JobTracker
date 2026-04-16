@@ -5,5 +5,6 @@ namespace JobTracker.Jobs.Application.Abstractions;
 /// </summary>
 public interface IUnitOfWork
 {
+    /// <summary>Commits tracked changes to the database.</summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

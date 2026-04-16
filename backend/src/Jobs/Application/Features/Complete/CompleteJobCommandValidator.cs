@@ -7,6 +7,7 @@ namespace JobTracker.Jobs.Application.Features.Complete;
 /// </summary>
 internal sealed class CompleteJobCommandValidator : AbstractValidator<CompleteJobCommand>
 {
+    /// <summary>Registers FluentValidation rules for <see cref="CompleteJobCommand"/>.</summary>
     public CompleteJobCommandValidator()
     {
         RuleFor(x => x.OrganizationId).NotEmpty();

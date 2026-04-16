@@ -12,6 +12,9 @@ namespace JobTracker.Jobs.Application.Features.Search;
 internal sealed class SearchJobsQueryHandler(IJobRepository jobs)
     : IRequestHandler<SearchJobsQuery, Result<PagedList<JobResponse>>>
 {
+    /// <summary>
+    /// Validates org and paging, searches the repository, maps rows to <see cref="JobResponse"/>.
+    /// </summary>
     public async Task<Result<PagedList<JobResponse>>> Handle(
         SearchJobsQuery request,
         CancellationToken cancellationToken

@@ -16,6 +16,7 @@ internal sealed class CreateJobCommandHandler(
     CreateJobCommandValidator validator
 ) : IRequestHandler<CreateJobCommand, Result<Guid>>
 {
+    /// <summary>Builds address and draft job, optionally schedules, persists and returns id.</summary>
     public async Task<Result<Guid>> Handle(
         CreateJobCommand request,
         CancellationToken cancellationToken

@@ -19,6 +19,7 @@ export type JobsGateway = {
 export function createJobsGateway(baseUrl: string): JobsGateway {
   const base = baseUrl.replace(/\/$/, '')
 
+  /** GET /api/Jobs with query params; normalizes JSON casing into domain jobs. */
   async function search(params: SearchJobsParams): Promise<PagedJobs> {
     const sp = new URLSearchParams()
     sp.set('organizationId', params.organizationId)
@@ -60,6 +61,7 @@ export function createJobsGateway(baseUrl: string): JobsGateway {
     return { items, totalCount, page, pageSize }
   }
 
+  /** POST /api/Jobs; returns id or API error message. */
   async function create(
     body: CreateJobInput
   ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
@@ -96,6 +98,7 @@ export function createJobsGateway(baseUrl: string): JobsGateway {
     return { ok: true, id }
   }
 
+  /** POST complete endpoint; 204 means success. */
   async function complete(
     input: CompleteJobInput
   ): Promise<{ ok: true } | { ok: false; error: string }> {

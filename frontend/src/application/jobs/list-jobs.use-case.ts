@@ -3,6 +3,7 @@ import type { PagedJobs, SearchJobsParams } from '@/infrastructure/api/jobs-api.
 
 export type ListJobsInput = SearchJobsParams
 
+/** Application service: delegates paged job search to the infrastructure gateway. */
 export function createListJobsUseCase(gateway: JobsGateway) {
   return async function listJobs(params: ListJobsInput): Promise<PagedJobs> {
     return gateway.search(params)

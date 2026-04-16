@@ -35,6 +35,7 @@ public sealed class Job : AggregateRoot
     /// </summary>
     private Job() { }
 
+    /// <summary>Creates a new draft job for the organization and customer.</summary>
     public static Job CreateDraft(
         Guid organizationId,
         string title,
@@ -61,11 +62,13 @@ public sealed class Job : AggregateRoot
         return job;
     }
 
+    /// <summary>Raises <see cref="JobCreatedDomainEvent"/> after persistence (e.g. for outbox).</summary>
     public void EmitCreatedDomainEvent() =>
         RaiseDomainEvent(new JobCreatedDomainEvent(Id, OrganizationId, AssigneeId));
 
     public IReadOnlyList<JobPhoto> Photos => _photos;
 
+    /// <summary>Adds a photo to a non-terminal job.</summary>
     public void AddPhoto(string url, DateTime capturedAtUtc, string? caption)
     {
         EnsureNotTerminal();
@@ -76,6 +79,7 @@ public sealed class Job : AggregateRoot
         Touch();
     }
 
+    /// <summary>Moves a draft job to scheduled with assignee and date.</summary>
     public void Schedule(DateTime scheduledDateUtc, Guid assigneeId)
     {
         EnsureNotTerminal();
@@ -91,6 +95,7 @@ public sealed class Job : AggregateRoot
         Touch();
     }
 
+    /// <summary>Moves a scheduled job to in progress.</summary>
     public void Start(DateTime startedAtUtc)
     {
         EnsureNotTerminal();
@@ -129,6 +134,7 @@ public sealed class Job : AggregateRoot
         Touch();
     }
 
+    /// <summary>Cancels a scheduled or in-progress job.</summary>
     public void Cancel(DateTime cancelledAtUtc, string reason)
     {
         EnsureNotTerminal();

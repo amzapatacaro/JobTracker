@@ -9,6 +9,7 @@ namespace JobTracker.Jobs.Application.Extensions;
 /// </summary>
 public static class ServiceCollectionExtension
 {
+    /// <summary>Registers MediatR handlers and FluentValidation validators from the Jobs application assembly.</summary>
     public static IServiceCollection AddJobsApplication(this IServiceCollection services)
     {
         services.AddMediatR(cfg =>

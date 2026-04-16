@@ -19,10 +19,12 @@ const JOB_STATUSES: readonly JobStatusApi[] = [
   'Cancelled',
 ] as const
 
+/** True when the string is a known API job status name. */
 function isJobStatusApi(s: string): s is JobStatusApi {
   return (JOB_STATUSES as readonly string[]).includes(s)
 }
 
+/** First value from a Next.js search param (string or array from duplicate keys). */
 function firstParam(v: string | string[] | undefined): string | undefined {
   if (v == null) return undefined
   return Array.isArray(v) ? v[0] : v
@@ -39,6 +41,7 @@ export const EMPTY_JOBS_LIST_FILTERS: JobsListUrlFilters = {
   searchText: '',
 }
 
+/** Maps Next.js search params to filter state; validates status and ISO dates; caps `q` length. */
 export function parseJobsListUrlFilters(sp: {
   status?: string | string[]
   from?: string | string[]
@@ -60,6 +63,7 @@ export function parseJobsListUrlFilters(sp: {
   }
 }
 
+/** Builds optional GET /api/Jobs query fields from UI filters (statuses, date bounds, text search). */
 export function jobsListFiltersToApiQuery(f: JobsListUrlFilters): {
   statuses?: string
   scheduledFromUtc?: string
@@ -80,6 +84,7 @@ export function jobsListFiltersToApiQuery(f: JobsListUrlFilters): {
   return out
 }
 
+/** Client-side route for the jobs list with page, pageSize, and filter query string. */
 export function buildJobsListPath(input: {
   page: number
   pageSize: JobListPageSize
@@ -97,6 +102,7 @@ export function buildJobsListPath(input: {
   return `/jobs?${sp.toString()}`
 }
 
+/** Parses `page` query; defaults to 1; invalid values become 1. */
 export function parseJobsListPage(raw: string | undefined): number {
   const n = Number.parseInt(raw ?? '1', 10)
   return Number.isFinite(n) && n >= 1 ? n : 1
@@ -108,6 +114,7 @@ export type ParsedJobsListSearchParams = {
   filters: JobsListUrlFilters
 }
 
+/** Full parser for `/jobs` URL: page, pageSize, and filter params from the request. */
 export function parseJobsListSearchParams(sp: {
   page?: string | string[]
   pageSize?: string | string[]

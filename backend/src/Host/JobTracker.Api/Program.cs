@@ -24,7 +24,6 @@ if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<JobTrackerDbContext>();
-    // Dev bootstrap without dotnet-ef (add EF migrations in CI when tooling matches SDK).
     await db.Database.EnsureCreatedAsync();
 }
 

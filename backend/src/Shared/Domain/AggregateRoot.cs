@@ -9,7 +9,9 @@ public abstract class AggregateRoot : Entity
 
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
+    /// <summary>Queues a domain event to be published after successful persistence.</summary>
     protected void RaiseDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
 
+    /// <summary>Clears events after they have been converted (e.g. to outbox) post-save.</summary>
     public void ClearDomainEvents() => _domainEvents.Clear();
 }

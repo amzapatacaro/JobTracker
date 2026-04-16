@@ -21,6 +21,7 @@ public sealed class Address(
     public decimal Latitude { get; } = latitude;
     public decimal Longitude { get; } = longitude;
 
+    /// <inheritdoc />
     protected override IEnumerable<object?> GetEqualityComponents()
     {
         yield return Street;

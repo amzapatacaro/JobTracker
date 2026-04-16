@@ -15,6 +15,7 @@ internal sealed class CompleteJobCommandHandler(
     CompleteJobCommandValidator validator
 ) : IRequestHandler<CompleteJobCommand, Result<Unit>>
 {
+    /// <summary>Validates, loads job, applies domain completion, persists.</summary>
     public async Task<Result<Unit>> Handle(CompleteJobCommand request, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(request, cancellationToken);

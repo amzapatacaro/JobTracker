@@ -13,10 +13,10 @@ Overview diagram: `docs/system-design.md`.
 docker compose up --build
 ```
 
-| Service       | URL                                                                           |
-| ------------- | ----------------------------------------------------------------------------- |
-| Web           | http://127.0.0.1:13000/jobs                                                 |
-| API / Swagger | http://127.0.0.1:15296/swagger                                              |
+| Service       | URL                                                                            |
+| ------------- | ------------------------------------------------------------------------------ |
+| Web           | http://127.0.0.1:13000/jobs                                                    |
+| API / Swagger | http://127.0.0.1:15296/swagger                                                 |
 | Postgres      | `localhost:15432`, user `postgres`, password `postgres`, database `jobtracker` |
 
 First run creates the `jobs` schema via `EnsureCreated()` in Development. `docker compose down` stops containers; `-v` removes the Postgres volume.
@@ -103,6 +103,8 @@ cd backend && dotnet test tests/JobTracker.Jobs.Tests/JobTracker.Jobs.Tests.cspr
 - **Latitude / longitude** — capture or resolve location properly (e.g. geocode the address on create/edit, or a map picker) instead of only storing the address text; the schema already has `latitude` / `longitude` columns for that.
 - **Migrations** for production (EF migrations or SQL scripts) instead of only `EnsureCreated()` in dev.
 - **Auth and real tenants**; **real assignees** instead of the mock list; broader **tests/coverage** in CI if needed.
+- **Secrets management (e.g. Azure Key Vault)** — store connection strings and other sensitive config outside `appsettings.json` (today `DefaultConnection` is plaintext for local dev) and load them at runtime in the cloud.
+- **Continuous deployment** — automate deploys to a staging/prod environment after CI passes (e.g. GitHub Actions + Azure Container Apps / App Service), not only build/test.
 
 ## Repo layout
 

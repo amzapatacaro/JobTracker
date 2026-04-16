@@ -17,6 +17,7 @@ namespace JobTracker.Jobs.Infrastructure.Extensions;
 /// </summary>
 public static class ServiceCollectionExtension
 {
+    /// <summary>Registers EF Core, repositories, Hangfire, outbox worker, and application layer.</summary>
     public static IServiceCollection AddJobsInfrastructure(
         this IServiceCollection services,
         string connectionString

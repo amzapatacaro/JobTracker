@@ -7,6 +7,7 @@ namespace JobTracker.Jobs.Application.Features.Create;
 /// </summary>
 internal sealed class CreateJobCommandValidator : AbstractValidator<CreateJobCommand>
 {
+    /// <summary>Registers FluentValidation rules for <see cref="CreateJobCommand"/>.</summary>
     public CreateJobCommandValidator()
     {
         RuleFor(x => x.OrganizationId).NotEmpty();

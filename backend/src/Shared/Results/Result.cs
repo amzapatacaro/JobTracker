@@ -17,7 +17,9 @@ public sealed class Result<T>
         Value = value;
     }
 
+    /// <summary>Successful result carrying <paramref name="value"/>.</summary>
     public static Result<T> Success(T value) => new(true, string.Empty, value);
 
+    /// <summary>Failed result with an error message.</summary>
     public static Result<T> Failure(string error) => new(false, error, default);
 }

@@ -9,6 +9,7 @@ namespace JobTracker.Jobs.Infrastructure.Persistence.Configurations;
 /// </summary>
 public sealed class JobPhotoConfiguration : IEntityTypeConfiguration<JobPhoto>
 {
+    /// <summary>Maps the <see cref="JobPhoto"/> table and indexes.</summary>
     public void Configure(EntityTypeBuilder<JobPhoto> builder)
     {
         builder.ToTable("job_photos");

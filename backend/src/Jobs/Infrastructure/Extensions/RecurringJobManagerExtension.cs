@@ -8,6 +8,7 @@ namespace JobTracker.Jobs.Infrastructure.Extensions;
 /// </summary>
 public static class RecurringJobManagerExtension
 {
+    /// <summary>Schedules the minutely outbox drain job.</summary>
     public static void RegisterOutboxRecurringJob(this IRecurringJobManager recurringJobs)
     {
         recurringJobs.AddOrUpdate<OutboxDispatcher>(

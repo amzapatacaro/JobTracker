@@ -8,6 +8,7 @@ namespace JobTracker.Jobs.Infrastructure.Persistence;
 /// </summary>
 public sealed class JobTrackerDbContextFactory : IDesignTimeDbContextFactory<JobTrackerDbContext>
 {
+    /// <summary>Builds a context with a fixed local Postgres connection for migrations tooling.</summary>
     public JobTrackerDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<JobTrackerDbContext>()

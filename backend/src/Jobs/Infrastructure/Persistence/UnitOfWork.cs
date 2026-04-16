@@ -7,6 +7,7 @@ namespace JobTracker.Jobs.Infrastructure.Persistence;
 /// </summary>
 internal sealed class UnitOfWork(JobTrackerDbContext db) : IUnitOfWork
 {
+    /// <inheritdoc />
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
         db.SaveChangesAsync(cancellationToken);
 }

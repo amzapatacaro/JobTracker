@@ -7,6 +7,7 @@ namespace JobTracker.Jobs.Application.Features.Start;
 /// </summary>
 internal sealed class StartJobCommandValidator : AbstractValidator<StartJobCommand>
 {
+    /// <summary>Registers FluentValidation rules for <see cref="StartJobCommand"/>.</summary>
     public StartJobCommandValidator()
     {
         RuleFor(x => x.OrganizationId).NotEmpty();

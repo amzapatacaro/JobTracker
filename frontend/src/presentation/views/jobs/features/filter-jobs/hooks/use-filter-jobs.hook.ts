@@ -63,6 +63,10 @@ function keyToSortConfig(key: string): ReturnType<typeof selectSortConfig> {
   return { field, direction }
 }
 
+/**
+ * Filter bar state: URL-backed filters trigger navigation; sort stays client-only.
+ * Search text is debounced before navigation.
+ */
 export function useFilterJobs() {
   const router = useRouter()
   const applied = useJobsStore(selectFilters)
@@ -82,6 +86,7 @@ export function useFilterJobs() {
     }
   }, [])
 
+  /** Pushes `/jobs` with page 1 and merged filters so the server refetches the list. */
   const navigateJobsList = useCallback(
     (
       updates: Partial<

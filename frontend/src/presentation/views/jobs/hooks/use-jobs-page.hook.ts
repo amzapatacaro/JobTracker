@@ -26,6 +26,9 @@ export type JobsClientProps = Readonly<{
   initialFilters: JobsFilters
 }>
 
+/**
+ * Syncs server props into the jobs store and wires list filters, create/complete modals, selection.
+ */
 export function useJobsPage({
   initialJobs,
   initialTotalCount,

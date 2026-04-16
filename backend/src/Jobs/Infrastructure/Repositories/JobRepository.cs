@@ -10,6 +10,7 @@ namespace JobTracker.Jobs.Infrastructure.Repositories;
 /// </summary>
 internal sealed partial class JobRepository(JobTrackerDbContext db) : IJobRepository
 {
+    /// <inheritdoc />
     public async Task<Job?> GetByIdAsync(
         Guid id,
         Guid organizationId,
@@ -22,6 +23,7 @@ internal sealed partial class JobRepository(JobTrackerDbContext db) : IJobReposi
                 cancellationToken
             );
 
+    /// <inheritdoc />
     public async Task AddAsync(Job job, CancellationToken cancellationToken = default)
     {
         await db.Jobs.AddAsync(job, cancellationToken);

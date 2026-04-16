@@ -41,6 +41,7 @@ export function formReducer(
   }
 }
 
+/** Default field values for the create-job modal. */
 export const emptyForm = (): CreateJobFormState => ({
   title: '',
   description: '',
@@ -55,6 +56,7 @@ export const emptyForm = (): CreateJobFormState => ({
   notes: '',
 })
 
+/** Modal state, demo-tenant create payload, and submit via server action. */
 export function useCreateJob() {
   const [open, setOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)

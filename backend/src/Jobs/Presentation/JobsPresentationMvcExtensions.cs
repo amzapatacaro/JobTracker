@@ -8,6 +8,7 @@ namespace JobTracker.Jobs.Presentation;
 /// </summary>
 public static class JobsPresentationMvcExtensions
 {
+    /// <summary>Registers controllers from the Jobs presentation assembly.</summary>
     public static IMvcBuilder AddJobsControllers(this IMvcBuilder mvc) =>
         mvc.AddApplicationPart(typeof(JobsController).Assembly);
 }

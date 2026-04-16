@@ -54,6 +54,7 @@ const defaultFilters: JobsFilters = {
   searchText: '',
 }
 
+/** Client-side row filter: status, substring search, and UTC calendar date range on scheduled date. */
 function jobMatchesFilters(job: Job, f: JobsFilters): boolean {
   if (f.statusFilter && job.status !== f.statusFilter) return false
 
@@ -76,6 +77,7 @@ function jobMatchesFilters(job: Job, f: JobsFilters): boolean {
   return true
 }
 
+/** Stable sort for title, status, or scheduled instant (nulls last for dates). */
 function compareJobs(a: Job, b: Job, field: NonNullable<JobsSortConfig>['field'], dir: 'asc' | 'desc'): number {
   const sign = dir === 'asc' ? 1 : -1
   if (field === 'title') {
@@ -100,23 +102,28 @@ export function selectFilteredJobs(state: JobsStore): Job[] {
   return [...list].sort((a, b) => compareJobs(a, b, sort.field, sort.direction))
 }
 
+/** Number of selected rows in the current table. */
 export function selectSelectedCount(state: JobsStore): number {
   return state.selectedJobIds.length
 }
 
+/** Current page, page size, and total count from the last server response. */
 export function selectPagination(state: JobsStore): JobsPagination {
   return state.pagination
 }
 
+/** Total pages from totalCount and pageSize (at least 1). */
 export function selectTotalPages(state: JobsStore): number {
   const { totalCount, pageSize } = state.pagination
   return Math.max(1, Math.ceil(totalCount / pageSize))
 }
 
+/** Active filters (mirrors URL / server for list query). */
 export function selectFilters(state: JobsStore): JobsFilters {
   return state.filters
 }
 
+/** Optional client sort applied after filtering. */
 export function selectSortConfig(state: JobsStore): JobsSortConfig {
   return state.sortConfig
 }
@@ -128,6 +135,7 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
   pagination: { page: 1, pageSize: 10, totalCount: 0 },
   sortConfig: null,
 
+  /** Replaces list slice from SSR; merges filters when provided; clears selection if page size changes. */
   hydrateFromServer: ({ jobs, pagination, filters }) => {
     set((state) => {
       const prevSize = Number(state.pagination.pageSize)
@@ -146,8 +154,10 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
     })
   },
 
+  /** Client-only sort for the current page of jobs (does not change the API request). */
   setSortConfig: (config) => set({ sortConfig: config }),
 
+  /** Adds or removes a job id in the table selection list. */
   toggleJobSelected: (id) =>
     set((state) => {
       const has = state.selectedJobIds.includes(id)
@@ -158,6 +168,7 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
       }
     }),
 
+  /** Marks a job completed in the UI immediately; call `rollback` if the API call fails. */
   applyOptimisticComplete: (jobId) => {
     const prev = get().jobs.find((j) => j.id === jobId)
     if (!prev) {

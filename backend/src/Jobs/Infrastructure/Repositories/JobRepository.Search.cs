@@ -5,6 +5,7 @@ namespace JobTracker.Jobs.Infrastructure.Repositories;
 
 internal sealed partial class JobRepository
 {
+    /// <inheritdoc />
     public async Task<JobSearchPage> SearchAsync(
         JobSearchCriteria criteria,
         CancellationToken cancellationToken = default

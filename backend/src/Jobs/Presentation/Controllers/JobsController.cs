@@ -18,6 +18,7 @@ namespace JobTracker.Jobs.Presentation.Controllers;
 [Route("api/[controller]")]
 public sealed class JobsController(IMediator mediator) : ControllerBase
 {
+    /// <summary>Creates a job (draft or scheduled when assignee and date are provided).</summary>
     [HttpPost]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -48,6 +49,7 @@ public sealed class JobsController(IMediator mediator) : ControllerBase
             : CreatedAtAction(nameof(Create), new { id = result.Value }, new { id = result.Value });
     }
 
+    /// <summary>Transitions a scheduled job to in progress.</summary>
     [HttpPost("{jobId:guid}/start")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -67,6 +69,7 @@ public sealed class JobsController(IMediator mediator) : ControllerBase
         return result.IsFailure ? BadRequest(new { error = result.Error }) : NoContent();
     }
 
+    /// <summary>Completes an in-progress job (assignee, signature URL, completion time).</summary>
     [HttpPost("{jobId:guid}/complete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -89,6 +92,9 @@ public sealed class JobsController(IMediator mediator) : ControllerBase
         return result.IsFailure ? BadRequest(new { error = result.Error }) : NoContent();
     }
 
+    /// <summary>
+    /// Paged job search: optional text, statuses (comma-separated), assignee, scheduled range.
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(PagedList<JobResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

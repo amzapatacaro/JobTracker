@@ -7,11 +7,13 @@ import { DEMO_ORGANIZATION_ID } from '@/shared/config/demo-tenant-ids'
 
 import { useJobsStore } from '../../../store'
 
+/** `datetime-local` string for the current moment (local timezone). */
 function localDatetimeInputValue(d = new Date()) {
   const p = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
+/** Complete-job modal: optional assignee picker, optimistic store update, server action. */
 export function useCompleteJob() {
   const [open, setOpen] = useState(false)
   const [jobId, setJobId] = useState<string | null>(null)
