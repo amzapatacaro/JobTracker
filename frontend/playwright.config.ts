@@ -17,7 +17,8 @@ export default defineConfig({
     /* Dedicated port so local `next dev` on :3000 does not collide with Playwright’s webServer. */
     baseURL: 'http://127.0.0.1:3001',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    /* Full-page capture on failure (artifacts under test-results/) for CI and local debugging. */
+    screenshot: { mode: 'only-on-failure', fullPage: true },
     video: 'off',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
