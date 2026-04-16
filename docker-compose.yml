@@ -1,6 +1,7 @@
 # Full stack for local runs (assessment submission guidelines).
 # Usage: docker compose up --build
-# Then open http://127.0.0.1:3000/jobs — API: http://127.0.0.1:5296/swagger
+# Host ports differ from local dev (:3000, :5296, :5432) to avoid collisions.
+# Web: http://127.0.0.1:13000/jobs — API: http://127.0.0.1:15296/swagger — Postgres: localhost:15432
 
 services:
   postgres:
@@ -10,7 +11,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: jobtracker
     ports:
-      - "5432:5432"
+      - "15432:5432"
     volumes:
       - jobtracker-pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -24,7 +25,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "5296:5296"
+      - "15296:5296"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:5296
@@ -39,7 +40,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "13000:3000"
     environment:
       NODE_ENV: production
       JOBS_API_BASE_URL: http://api:5296

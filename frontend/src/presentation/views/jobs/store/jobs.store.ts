@@ -11,6 +11,7 @@ export type JobsFilters = {
   statusFilter: string
   fromDate: string
   toDate: string
+  searchText: string
 }
 
 export type JobsSortConfig = {
@@ -50,10 +51,17 @@ const defaultFilters: JobsFilters = {
   statusFilter: '',
   fromDate: '',
   toDate: '',
+  searchText: '',
 }
 
 function jobMatchesFilters(job: Job, f: JobsFilters): boolean {
   if (f.statusFilter && job.status !== f.statusFilter) return false
+
+  const needle = f.searchText.trim().toLowerCase()
+  if (needle) {
+    const hay = `${job.title}\n${job.description}`.toLowerCase()
+    if (!hay.includes(needle)) return false
+  }
 
   if (!job.scheduledDateUtc) return true
 

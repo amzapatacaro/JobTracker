@@ -23,6 +23,24 @@ const fieldLabel = 'text-xs font-medium text-zinc-600'
 const control =
   'mt-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm transition focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/20'
 
+function TextSearch() {
+  const { searchText, setSearchText } = useJobFilterContext()
+  return (
+    <label className="flex min-w-[200px] max-w-md flex-1 flex-col">
+      <span className={fieldLabel}>Search</span>
+      <input
+        type="search"
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        placeholder="Title or description…"
+        className={`${control} w-full min-w-0`}
+        data-testid="jobs-filter-search"
+        autoComplete="off"
+      />
+    </label>
+  )
+}
+
 function JobFilterBarRoot({
   children,
   value,
@@ -123,6 +141,7 @@ function PageSize() {
           }
         }}
         className={`${control} min-w-[100px] select-native`}
+        data-testid="jobs-filter-page-size"
         aria-label="Jobs per page"
       >
         {JOB_LIST_PAGE_SIZES.map((n) => (
@@ -135,25 +154,10 @@ function PageSize() {
   )
 }
 
-function Apply() {
-  const { applySearch } = useJobFilterContext()
-  return (
-    <button
-      type="button"
-      className="jt-btn-primary shrink-0 self-end px-4 py-2 text-sm"
-      data-testid="jobs-filter-apply"
-      onClick={applySearch}
-      aria-label="Apply filters and reload the list"
-    >
-      Search
-    </button>
-  )
-}
-
 export const JobFilterBar = Object.assign(JobFilterBarRoot, {
+  TextSearch,
   Status,
   DateRange,
   Sort,
   PageSize,
-  Apply,
 })

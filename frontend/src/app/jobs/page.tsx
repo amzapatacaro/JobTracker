@@ -17,6 +17,7 @@ type JobsPageProps = {
     status?: string
     from?: string
     to?: string
+    q?: string
   }>
 }
 
@@ -51,7 +52,7 @@ async function JobsListSection({
 export default async function JobsPage({ searchParams }: JobsPageProps) {
   const sp = await searchParams
   const { page, pageSize, filters } = parseJobsListSearchParams(sp)
-  const suspenseKey = `${page}-${pageSize}-${filters.statusFilter}-${filters.fromDate}-${filters.toDate}`
+  const suspenseKey = `${page}-${pageSize}-${filters.statusFilter}-${filters.fromDate}-${filters.toDate}-${filters.searchText}`
 
   return (
     <div className="box-border flex h-[100dvh] flex-col overflow-hidden overscroll-none px-4 py-8 sm:px-6 lg:px-8">

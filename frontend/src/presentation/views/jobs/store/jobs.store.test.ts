@@ -37,7 +37,7 @@ function resetJobsStore() {
   useJobsStore.setState({
     jobs: [],
     selectedJobIds: [],
-    filters: { statusFilter: '', fromDate: '', toDate: '' },
+    filters: { statusFilter: '', fromDate: '', toDate: '', searchText: '' },
     pagination: { page: 1, pageSize: 10, totalCount: 0 },
     sortConfig: null,
   })
@@ -49,7 +49,12 @@ describe('jobs store selectors', () => {
     const mock = {
       ...state,
       jobs: [jobDraft('1'), jobScheduled('2')],
-      filters: { statusFilter: 'Scheduled', fromDate: '', toDate: '' },
+      filters: {
+        statusFilter: 'Scheduled',
+        fromDate: '',
+        toDate: '',
+        searchText: '',
+      },
     }
     const list = selectFilteredJobs(mock)
     expect(list).toHaveLength(1)
@@ -69,10 +74,33 @@ describe('jobs store selectors', () => {
     const mock = {
       ...state,
       jobs: [early, late],
-      filters: { statusFilter: '', fromDate: '2026-06-10', toDate: '2026-06-30' },
+      filters: {
+        statusFilter: '',
+        fromDate: '2026-06-10',
+        toDate: '2026-06-30',
+        searchText: '',
+      },
     }
     const list = selectFilteredJobs(mock)
     expect(list.map((j) => j.id)).toEqual(['late'])
+  })
+
+  it('selectFilteredJobs respects search text on title and description', () => {
+    const state = useJobsStore.getState()
+    const a: Job = { ...jobScheduled('a'), title: 'Roof repair', description: 'Tiles' }
+    const b: Job = { ...jobScheduled('b'), title: 'Other', description: 'Roof leak' }
+    const mock = {
+      ...state,
+      jobs: [a, b],
+      filters: {
+        statusFilter: '',
+        fromDate: '',
+        toDate: '',
+        searchText: 'roof',
+      },
+    }
+    const list = selectFilteredJobs(mock)
+    expect(list.map((j) => j.id)).toEqual(['a', 'b'])
   })
 
   it('selectSelectedCount', () => {

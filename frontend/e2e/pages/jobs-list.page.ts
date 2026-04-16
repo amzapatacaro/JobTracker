@@ -21,7 +21,6 @@ export class JobsListPage {
 
   async applyStatusFilter(statusValue: string): Promise<void> {
     await this.page.getByTestId('jobs-filter-status').selectOption(statusValue)
-    await this.page.getByTestId('jobs-filter-apply').click()
     await this.page.waitForURL(
       (url) => new URL(url).searchParams.get('status') === statusValue,
       { timeout: 120_000 }

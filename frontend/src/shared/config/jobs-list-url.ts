@@ -8,6 +8,7 @@ export type JobsListUrlFilters = {
   statusFilter: string
   fromDate: string
   toDate: string
+  searchText: string
 }
 
 const JOB_STATUSES: readonly JobStatusApi[] = [
@@ -29,25 +30,33 @@ function firstParam(v: string | string[] | undefined): string | undefined {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
+const MAX_SEARCH_Q_LEN = 500
+
 export const EMPTY_JOBS_LIST_FILTERS: JobsListUrlFilters = {
   statusFilter: '',
   fromDate: '',
   toDate: '',
+  searchText: '',
 }
 
 export function parseJobsListUrlFilters(sp: {
   status?: string | string[]
   from?: string | string[]
   to?: string | string[]
+  q?: string | string[]
 }): JobsListUrlFilters {
   const statusRaw = firstParam(sp.status) ?? ''
   const statusFilter = isJobStatusApi(statusRaw) ? statusRaw : ''
   const fromRaw = firstParam(sp.from) ?? ''
   const toRaw = firstParam(sp.to) ?? ''
+  const qRaw = (firstParam(sp.q) ?? '').trim()
+  const searchText =
+    qRaw.length > MAX_SEARCH_Q_LEN ? qRaw.slice(0, MAX_SEARCH_Q_LEN) : qRaw
   return {
     statusFilter,
     fromDate: ISO_DATE.test(fromRaw) ? fromRaw : '',
     toDate: ISO_DATE.test(toRaw) ? toRaw : '',
+    searchText,
   }
 }
 
@@ -55,15 +64,19 @@ export function jobsListFiltersToApiQuery(f: JobsListUrlFilters): {
   statuses?: string
   scheduledFromUtc?: string
   scheduledToUtc?: string
+  q?: string
 } {
   const out: {
     statuses?: string
     scheduledFromUtc?: string
     scheduledToUtc?: string
+    q?: string
   } = {}
   if (f.statusFilter) out.statuses = f.statusFilter
   if (f.fromDate) out.scheduledFromUtc = `${f.fromDate}T00:00:00.000Z`
   if (f.toDate) out.scheduledToUtc = `${f.toDate}T23:59:59.999Z`
+  const q = f.searchText.trim()
+  if (q) out.q = q.length > MAX_SEARCH_Q_LEN ? q.slice(0, MAX_SEARCH_Q_LEN) : q
   return out
 }
 
@@ -78,6 +91,9 @@ export function buildJobsListPath(input: {
   if (input.filters.statusFilter) sp.set('status', input.filters.statusFilter)
   if (input.filters.fromDate) sp.set('from', input.filters.fromDate)
   if (input.filters.toDate) sp.set('to', input.filters.toDate)
+  const q = input.filters.searchText.trim()
+  if (q)
+    sp.set('q', q.length > MAX_SEARCH_Q_LEN ? q.slice(0, MAX_SEARCH_Q_LEN) : q)
   return `/jobs?${sp.toString()}`
 }
 
@@ -92,6 +108,7 @@ export function parseJobsListSearchParams(sp: {
   status?: string | string[]
   from?: string | string[]
   to?: string | string[]
+  q?: string | string[]
 }): {
   page: number
   pageSize: JobListPageSize
@@ -104,6 +121,7 @@ export function parseJobsListSearchParams(sp: {
       status: sp.status,
       from: sp.from,
       to: sp.to,
+      q: sp.q,
     }),
   }
 }

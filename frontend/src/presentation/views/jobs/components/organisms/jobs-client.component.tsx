@@ -70,11 +70,11 @@ export function JobsClient(props: Readonly<JobsClientProps>) {
 
       <div className="mt-6 shrink-0">
         <JobFilterBar value={jobsPage.filterCtx}>
+          <JobFilterBar.TextSearch />
           <JobFilterBar.Status />
           <JobFilterBar.DateRange />
           <JobFilterBar.Sort />
           <JobFilterBar.PageSize />
-          <JobFilterBar.Apply />
         </JobFilterBar>
       </div>
 

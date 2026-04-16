@@ -15,9 +15,9 @@ docker compose up --build
 
 | Service       | URL                                                                           |
 | ------------- | ----------------------------------------------------------------------------- |
-| Web           | http://127.0.0.1:3000/jobs                                                    |
-| API / Swagger | http://127.0.0.1:5296/swagger                                                 |
-| Postgres      | `localhost:5432`, user `postgres`, password `postgres`, database `jobtracker` |
+| Web           | http://127.0.0.1:13000/jobs                                                 |
+| API / Swagger | http://127.0.0.1:15296/swagger                                              |
+| Postgres      | `localhost:15432`, user `postgres`, password `postgres`, database `jobtracker` |
 
 First run creates the `jobs` schema via `EnsureCreated()` in Development. `docker compose down` stops containers; `-v` removes the Postgres volume.
 

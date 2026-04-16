@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -16,14 +16,16 @@ import {
   useJobsStore,
 } from '../../../store'
 
+const SEARCH_DEBOUNCE_MS = 350
+
 export type SearchFiltersDraft = Pick<
   JobsFilters,
-  'statusFilter' | 'fromDate' | 'toDate'
+  'statusFilter' | 'fromDate' | 'toDate' | 'searchText'
 >
 
-export type SearchDraft = SearchFiltersDraft & { pageSize: JobListPageSize }
-
 export type JobFilterContextValue = {
+  searchText: string
+  setSearchText: (v: string) => void
   statusFilter: string
   setStatusFilter: (v: string) => void
   fromDate: string
@@ -34,7 +36,6 @@ export type JobFilterContextValue = {
   setSortKey: (v: string) => void
   pageSize: number
   setPageSize: (v: JobListPageSize) => void
-  applySearch: () => void
   /** Filters already reflected in URL / server (e.g. pagination links). */
   appliedSearchFilters: SearchFiltersDraft
 }
@@ -69,60 +70,87 @@ export function useFilterJobs() {
   const pagination = useJobsStore(selectPagination)
   const setSortConfig = useJobsStore((s) => s.setSortConfig)
 
-  const [draft, setDraft] = useState<SearchDraft>(() => ({
-    statusFilter: applied.statusFilter,
-    fromDate: applied.fromDate,
-    toDate: applied.toDate,
-    pageSize: pagination.pageSize as JobListPageSize,
-  }))
-
+  const [searchText, setSearchTextLocal] = useState(applied.searchText)
   useEffect(() => {
-    setDraft({
-      statusFilter: applied.statusFilter,
-      fromDate: applied.fromDate,
-      toDate: applied.toDate,
-      pageSize: pagination.pageSize as JobListPageSize,
-    })
-  }, [
-    applied.statusFilter,
-    applied.fromDate,
-    applied.toDate,
-    pagination.pageSize,
-  ])
+    setSearchTextLocal(applied.searchText)
+  }, [applied.searchText])
 
-  const applySearch = useCallback(() => {
-    const { pageSize, statusFilter, fromDate, toDate } = draft
-    router.push(
-      buildJobsListPath({
-        page: 1,
-        pageSize,
-        filters: { statusFilter, fromDate, toDate },
-      })
-    )
-  }, [router, draft])
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [])
+
+  const navigateJobsList = useCallback(
+    (
+      updates: Partial<
+        Pick<
+          JobsFilters,
+          'searchText' | 'statusFilter' | 'fromDate' | 'toDate'
+        >
+      > & { pageSize?: JobListPageSize }
+    ) => {
+      const filters = {
+        searchText: updates.searchText ?? applied.searchText,
+        statusFilter: updates.statusFilter ?? applied.statusFilter,
+        fromDate: updates.fromDate ?? applied.fromDate,
+        toDate: updates.toDate ?? applied.toDate,
+      }
+      const pageSize = (updates.pageSize ?? pagination.pageSize) as JobListPageSize
+      router.push(
+        buildJobsListPath({
+          page: 1,
+          pageSize,
+          filters,
+        })
+      )
+    },
+    [applied, pagination.pageSize, router]
+  )
+
+  const setSearchText = useCallback(
+    (v: string) => {
+      setSearchTextLocal(v)
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+      searchDebounceRef.current = setTimeout(() => {
+        searchDebounceRef.current = null
+        navigateJobsList({ searchText: v })
+      }, SEARCH_DEBOUNCE_MS)
+    },
+    [navigateJobsList]
+  )
 
   const ctx: JobFilterContextValue = useMemo(
     () => ({
-      statusFilter: draft.statusFilter,
-      setStatusFilter: (v: string) =>
-        setDraft((d) => ({ ...d, statusFilter: v })),
-      fromDate: draft.fromDate,
-      setFromDate: (v: string) => setDraft((d) => ({ ...d, fromDate: v })),
-      toDate: draft.toDate,
-      setToDate: (v: string) => setDraft((d) => ({ ...d, toDate: v })),
+      searchText,
+      setSearchText,
+      statusFilter: applied.statusFilter,
+      setStatusFilter: (v: string) => navigateJobsList({ statusFilter: v }),
+      fromDate: applied.fromDate,
+      setFromDate: (v: string) => navigateJobsList({ fromDate: v }),
+      toDate: applied.toDate,
+      setToDate: (v: string) => navigateJobsList({ toDate: v }),
       sortKey: sortConfigToKey(sortConfig),
       setSortKey: (v: string) => setSortConfig(keyToSortConfig(v)),
-      pageSize: draft.pageSize,
-      setPageSize: (v: JobListPageSize) =>
-        setDraft((d) => ({ ...d, pageSize: v })),
-      applySearch,
+      pageSize: pagination.pageSize,
+      setPageSize: (v: JobListPageSize) => navigateJobsList({ pageSize: v }),
       appliedSearchFilters: {
+        searchText: applied.searchText,
         statusFilter: applied.statusFilter,
         fromDate: applied.fromDate,
         toDate: applied.toDate,
       },
     }),
-    [draft, applied, sortConfig, pagination.pageSize, setSortConfig, router, applySearch]
+    [
+      searchText,
+      setSearchText,
+      applied,
+      sortConfig,
+      pagination.pageSize,
+      navigateJobsList,
+      setSortConfig,
+    ]
   )
 
   return { ctx }
